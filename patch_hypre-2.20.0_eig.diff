@@ -1,0 +1,19 @@
+--- src/parcsr_ls/par_relax_more.c.orig	2020-09-24 20:56:42.000000000 +0300
++++ src/parcsr_ls/par_relax_more.c	2021-11-01 02:07:07.532990617 +0300
+@@ -204,6 +204,16 @@
+        trioffd[i] = 0;
+     }
+ 
++    HYPRE_Int scale_local = scale;
++    for (i = 0; i < local_size; i++)
++    {
++        diag = A_diag_data[A_diag_i[i]];
++        if (diag <= 0.0) 
++        {
++            scale_local = 0;
++        }
++    }
++    hypre_MPI_Allreduce(&scale_local, &scale, 1, hypre_MPI_INT, hypre_MPI_MIN, hypre_ParCSRMatrixComm(A));
+ 
+     /* set residual to random */
+     hypre_ParVectorSetRandomValues(r,1);

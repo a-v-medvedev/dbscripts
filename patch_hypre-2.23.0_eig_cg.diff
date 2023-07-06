@@ -1,0 +1,13 @@
+--- src/parcsr_ls/par_relax_more.c.orig	2021-10-01 01:54:27.000000000 +0300
++++ src/parcsr_ls/par_relax_more.c	2021-11-21 12:54:45.488452000 +0300
+@@ -370,6 +370,10 @@
+       hypre_ParVectorAxpy( -alpha, s, r);
+ 
+       i++;
++
++      HYPRE_Real r_nrm = hypre_ParVectorInnerProd(r, r);
++      if (r_nrm < 1e-16)
++        break;
+    }
+ 
+    /* eispack routine - eigenvalues return in tridiag and ordered*/
