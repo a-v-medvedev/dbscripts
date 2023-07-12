@@ -91,6 +91,7 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__QUEUE__" "$PSUBMIT_OPTS_QUEUE_NAME"))
     repl=$(echo "${repl}" $(construct_replacement_command "__QUEUE_SUFFIX__" "$PSUBMIT_OPTS_QUEUE_SUFFIX"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NODETYPE__" "$PSUBMIT_OPTS_NODETYPE"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__RESOURCE_HANDLING__" "$PSUBMIT_OPTS_RESOURCE_HANDLING"))
     repl=$(echo "${repl}" $(construct_replacement_command "__INIT_COMMANDS__" "$PSUBMIT_OPTS_INIT_COMMANDS"))
     repl=$(echo "${repl}" $(construct_replacement_command "__INJOB_INIT_COMMANDS__" "$PSUBMIT_OPTS_INJOB_INIT_COMMANDS"))
     repl=$(echo "${repl}" $(construct_replacement_command "__MPI_SCRIPT__" "$PSUBMIT_OPTS_MPI_SCRIPT"))

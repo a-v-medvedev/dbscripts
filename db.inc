@@ -34,7 +34,9 @@ function dubi_main {
     touch .saved_pkg_records
 	set +u
 	local override_versions="${PACKAGE_VERSIONS}"
-    local dependencies="${PACKAGE_DEPS}"
+    local dependencies=""
+    [ -z "$*" ] && dependencies="${PACKAGE_DEPS}"
+    is_any_char_present "$*" ":" || dependencies="${PACKAGE_DEPS}"
     set -u
     local default_build_mode="$(get_default_build_mode)"
     
@@ -256,7 +258,9 @@ function bi_autoconf_make() {
         [ ! -e ${pkg}-${VER}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${VER}.src
         [ ! -z "$commands" ] && eval "$commands"
+	set -x
         ./configure $opts --prefix=$INSTALL_DIR/${pkg}-${VER}
+	set +x
         make clean
         make -j $MAKE_PARALLEL_LEVEL
         cd $INSTALL_DIR
