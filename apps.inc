@@ -340,3 +340,32 @@ function dnb_tensorflow() {
 		cd $INSTALL_DIR
 	fi
 }
+
+function dnb_netcdf-fortran() {
+    local pkg="netcdf-fortran"
+    environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
+    local m=$(get_field "$1" 2 "=")
+    local V=$(get_field "$2" 2 "=")
+    du_github "Unidata" "netcdf-fortran" "v" "$V" "$m"
+    local OPTS=""
+    OPTS="$OPTS CPPFLAGS=-I$INSTALL_DIR/netcdf-c.bin/include"
+#   for newest gfortran versions: OPTS="$OPTS FCFLAGS=-fallow-argument-mismatch""
+    local CMDS="export LDFLAGS=\"-L$INSTALL_DIR/netcdf-c.bin/lib -Wl,-rpath,$INSTALL_DIR/netcdf-c.bin/lib\""
+    bi_autoconf_make "$pkg" "$V" "$CMDS" "$OPTS" "$m"
+    i_make_binary_symlink "$pkg" "${V}" "$m"
+}
+
+function dnb_netcdf-c() {
+    local pkg="netcdf-c"
+    environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
+    local m=$(get_field "$1" 2 "=")
+    local V=$(get_field "$2" 2 "=")
+    du_github "Unidata" "netcdf-c" "v" "$V" "$m"
+    local OPTS=""
+    OPTS="$OPTS CPPFLAGS=-I$INSTALL_DIR/hdf5.bin/include"
+    OPTS="$OPTS LDFLAGS=-L$INSTALL_DIR/hdf5.bin/lib"
+    OPTS="$OPTS --enable-parallel4"
+    bi_autoconf_make "$pkg" "$V" "" "$OPTS" "$m"
+    i_make_binary_symlink "$pkg" "${V}" "$m"
+}
+	

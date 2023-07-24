@@ -220,6 +220,37 @@ function du_gitclone_recursive() {
 	fi
 }
 
+function du_svn() { 
+    local pkg="$1"
+    local url="$2"
+    local VER="$3" 
+    local m="$4"
+    mkdir -p "${pkg}.dwn"
+    if this_mode_is_set 'd' "$m"; then
+        cd "${pkg}.dwn" 
+        svn --force export "$url" "$pkg"
+        cd "$pkg" 
+        if [ -d "$pkg" ]; then
+            tar czf "../${pkg}-${VER}.tar.gz" "$pkg"
+        else
+            cd ..
+            tar czf "${pkg}-${VER}.tar.gz" "$pkg"
+        fi
+        cd $INSTALL_DIR
+    fi
+    if this_mode_is_set 'u' "$m"; then
+        local archive="${pkg}.dwn/${pkg}-${VER}.tar.gz"
+        [ -e "$archive" ] || fatal "${pkg}: no downloaded archive file: $archive"
+        local DIR=$(tar tzf "$archive" | head -n1 | sed s!/!!)
+        [ "$DIR" == "." ] && fatal "malformed source tar archive: ${archive}."
+        [ -e "$DIR" ] && rm -rf "$DIR"
+        tar zxf "$archive"
+        [ -d "$DIR" ] || fatal "${pkg}: error handling directory name in downloaded archive"
+        [ -e "${pkg}-${VER}.src" ] && rm -rf "${pkg}-${VER}.src"
+        mv "${DIR}" "${pkg}-${VER}.src"
+    fi
+}
+
 function bi_cmake() {
     local proj="$1"
     local VER="$2"

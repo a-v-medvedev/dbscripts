@@ -48,6 +48,25 @@ function find_excluding_paths() {
     set +f
 }
 
+function check_file_mask() {
+	local filename="$1"
+	local mask="$2"
+	case "$1" in
+	    $2) return 0; ;;
+	    *) return 1; ;;
+	esac
+}
+
+function is_static_lib() {
+    local f="$1"
+    if check_file_mask "$(basename $f)" "*.a" && [ "$(file -b "$f")" == "current ar archive" ]; then
+        local non_object=false;
+        ar t "$f" | while read n; do check_file_mask "$n" "*.o" || non_object=true; done
+	[ "$non_object" == "false" ] && return 0;
+    fi
+    return 1
+}
+
 function is_elf() {
     local f="$1"
     [ $(file -b "$f" | awk '{print $1}') == "ELF" ] && return 0
@@ -73,7 +92,13 @@ function print_all_exec_files() {
     fi
     local allf=""
     [ -z "$f" ] && echo "" && return
-    for i in $f; do is_elf $i && allf="$allf $i"; done
+    for i in $f; do 
+	case "$i" in 
+	    *.so|*.exe|*.dylib) is_elf "$i" && allf="$allf $i"; ;; 
+	    *.a) is_static_lib "$i" && allf="$allf $i"; ;;
+	    *) is_elf "$i" && allf="$allf $i"; ;;
+	esac
+    done
     ls_with_time $allf | awk -v T="$started_time" '{ if (T!="" && $6>=T) ISNEW=">>"; else ISNEW="--"; printf ISNEW " " $6 "\\t" "%15d" "\\t" $7 "\\n", $5 }'
 }
 
