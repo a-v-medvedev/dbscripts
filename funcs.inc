@@ -118,6 +118,7 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__NODETYPE__" "$PSUBMIT_OPTS_NODETYPE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__RESOURCE_HANDLING__" "$PSUBMIT_OPTS_RESOURCE_HANDLING"))
     repl=$(echo "${repl}" $(construct_replacement_command "__PPN__" "$PSUBMIT_OPTS_PPN"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__NTH__" "$PSUBMIT_OPTS_NTH"))
     repl=$(echo "${repl}" $(construct_replacement_command "__INIT_COMMANDS__" "$PSUBMIT_OPTS_INIT_COMMANDS"))
     repl=$(echo "${repl}" $(construct_replacement_command "__INJOB_INIT_COMMANDS__" "$PSUBMIT_OPTS_INJOB_INIT_COMMANDS"))
     repl=$(echo "${repl}" $(construct_replacement_command "__MPI_SCRIPT__" "$PSUBMIT_OPTS_MPI_SCRIPT"))
