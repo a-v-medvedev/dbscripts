@@ -154,6 +154,7 @@ function du_gitlab {
     set +u
     local host="$6"
 	local token="$7"
+    local projectid="$8"
     set -u
     [ -z "$m" ] && return
     [ -z "$host" ] && host="gitlab.com"
@@ -168,9 +169,16 @@ function du_gitlab {
         if [ ! -z "${token}" ]; then
             local sha=""
             [ "${XVER}" == "HEAD" ] || sha="?sha=${VER}" && sha="?sha=$XBRANCH"
-            url="https://${host}/api/v4/projects/${addr}%2F${pkg}/repository/archive${sha}"
+            [ -z "$projectid" ] && projectid="${addr}%2F${pkg}"
+            url="https://${host}/api/v4/projects/$projectid/repository/archive${sha}"
         else
-            url="https://${host}/${addr}/${pkg}/-/archive/${VER}/${pfx}${VER}.tar.gz"
+            if [ "${XVER}" == "HEAD" ]; then
+                local branch=master
+                [ $(get_nfields "$VER" "^") == "2" ] && branch=$XBRANCH
+                url="https://${host}/${addr}/${pkg}/-/archive/${branch}/${pfx}${branch}.tar.gz"
+            else
+                url="https://${host}/${addr}/${pkg}/-/archive/${VER}/${pfx}${VER}.tar.gz"
+            fi
         fi
 		local header=""
 	    [ -z "${token}" ] || header="--header=PRIVATE-TOKEN:$token"
