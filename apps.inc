@@ -348,7 +348,7 @@ function dnb_netcdf-fortran() {
     local V=$(get_field "$2" 2 "=")
     du_github "Unidata" "netcdf-fortran" "v" "$V" "$m"
     local OPTS=""
-    OPTS="$OPTS CPPFLAGS=-I$INSTALL_DIR/netcdf-c.bin/include"
+    OPTS="$OPTS FCFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-I$INSTALL_DIR/netcdf-c.bin/include"
 #   for newest gfortran versions: OPTS="$OPTS FCFLAGS=-fallow-argument-mismatch""
     local CMDS="export LDFLAGS=\"-L$INSTALL_DIR/netcdf-c.bin/lib -Wl,-rpath,$INSTALL_DIR/netcdf-c.bin/lib\""
     bi_autoconf_make "$pkg" "$V" "$CMDS" "$OPTS" "$m"
