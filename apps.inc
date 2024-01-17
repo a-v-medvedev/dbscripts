@@ -80,6 +80,7 @@ function dnb_psubmit() {
         cd ${pkg}-${V}.src
         FILES=$(ls -1 *.sh)
         cd $INSTALL_DIR
+        rm -rf "$pkg"-"$V"
         i_direct_copy "$pkg" "$V" "$FILES" "$m"
         i_make_binary_symlink "$pkg" "${V}" "$m"
         i_save_this_pkg_record "$pkg" "${V}" "$m"
