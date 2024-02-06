@@ -106,7 +106,7 @@ function dnb_yaml-cpp() {
     if this_mode_is_set "i" "$m"; then
         if [ -d "$pkg".bin/lib64 ]; then
             cd "$pkg".bin
-            ln -s lib64 lib
+            [ -e lib ] || ln -sf lib64 lib
             cd $INSTALL_DIR
         fi
     fi
