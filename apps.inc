@@ -97,7 +97,6 @@ function dnb_yaml-cpp() {
     du_github "jbeder" "yaml-cpp" "yaml-cpp-" "$V" "$m"
     local OPTS=""
     OPTS="$OPTS -DBUILD_SHARED_LIBS=OFF"
-    OPTS="$OPTS -DBUILD_STATIC_LIBS=ON"
     OPTS="$OPTS -DYAML_CPP_BUILD_TESTS=OFF"
     OPTS="$OPTS -DYAML_CPP_BUILD_TOOLS=OFF"
     OPTS="$OPTS -DYAML_CPP_BUILD_CONTRIB=OFF"
