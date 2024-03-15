@@ -163,7 +163,6 @@ function dnb_nemo() {
     [ -z "$NEMO_WORKLOAD_MD5" ] && fatal "NEMO_WORKLOAD_MD5 is required, must be set in env.sh"
 
     mkdatalink "$INSTALL_DIR" "$NEMO_WORKLOAD_ARCHIVE"
-    mkdatalink "$INSTALL_DIR" "nemo_de340.tgz"
 
     if beginswith "$V" "4.0"; then
         du_svn "$pkg" "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V" "$V" "$m"
