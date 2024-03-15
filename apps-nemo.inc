@@ -231,8 +231,6 @@ function dnb_nemo() {
             sed -i 's/ln_timing_detail = \.FALSE\./ln_timing_detail = .TRUE./' "./src/OCE/IOM/in_out_manager.F90"
         fi
         cat > arch/arch-dnb.fcm <<EOF
-
-        cat > arch/arch-dnb.fcm <<EOF
 %NCDF_INC            -I$NEMO_NETCDF_FORTRAN_PATH/include
 %NCDF_LIB            -L$NEMO_NETCDF_FORTRAN_PATH/lib -L$NEMO_NETCDF_C_PATH/lib -L$NEMO_HDF5_PATH/lib -lhdf5 -lhdf5_hl -lnetcdf -lnetcdff
 %XIOS_INC            -I$NEMO_XIOS_PATH/inc
