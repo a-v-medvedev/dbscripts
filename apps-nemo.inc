@@ -172,13 +172,14 @@ function dnb_nemo() {
     # TODO: add something working for 4.2 from github
     # go with github:
     # du_github ...
-        fatal "not supported version"
+        fatal "getting source code: not supported version of NEMO"
     fi
 
     if this_mode_is_set 'd' "$m" || this_mode_is_set 'u' "$m"; then
-        # workload:
+        # workload: for NEMO 4.0 community verson:
         # download from https://zenodo.org/record/2640723#.ZGOnotJByV4  
-        # avoid downloading if there are pre-downloaded files
+        # for NEMO 4.2: TBD
+        # Avoid downloading if there are pre-downloaded files:
         cd "${pkg}.dwn"
         if [ -f "$NEMO_WORKLOAD_ARCHIVE" ]; then
             echo "$NEMO_WORKLOAD_MD5 $NEMO_WORKLOAD_ARCHIVE" | md5sum -c --status || rm -f "$NEMO_WORKLOAD_ARCHIVE"
@@ -188,22 +189,15 @@ function dnb_nemo() {
                 rm -f "$NEMO_WORKLOAD_ARCHIVE"
                 ln -s "../$NEMO_WORKLOAD_ARCHIVE" .
             else
-                wget -nv -O "$NEMO_WORKLOAD_ARCHIVE" "https://zenodo.org/record/2640723/files/$NEMO_WORKLOAD_ARCHIVE?download=1"
+                # We really have to download:
+                if beginswith "$V" "4.0"; then
+                    wget -nv -O "$NEMO_WORKLOAD_ARCHIVE" "https://zenodo.org/record/2640723/files/$NEMO_WORKLOAD_ARCHIVE?download=1"
+                # elif beginswith "$V" "4.2"; then
+                # TODO add workload download code for 4.2
+                else
+                    fatal "For this NEMO version, we don't know how to get the workload." 
+                fi
             fi
-        fi
-
-        cd $INSTALL_DIR
-        if this_mode_is_set 'u' "$m"; then
-            cd ${pkg}-${V}.src
-            set +u
-            if [ ! -z "$NEMO_USE_MAKE" ]; then
-                patch < ../makefile-hack/patch_makenemo.patch
-            fi
-            set -u
-            ln -s ../makefile-hack/Makefile .
-            ln -s ../makefile-hack/Makefile_deps.mk .
-            ln -s ../makefile-hack/finddeps.sh .
-            #patch -p1 < ../patches/patch_nemo_isnan_v1.patch
         fi
         cd $INSTALL_DIR
     fi
