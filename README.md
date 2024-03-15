@@ -69,6 +69,6 @@ function dnb_foobar() {
 
 ```
 
-In these predefined functions (see db.inc), the first letters in name denote which of `d`, `u`, `b`, `i` build modes it handles. Build modes are just acronums from `download`, `build`, `unpack`, `install`.  
+In these predefined functions (see db.inc), the first letters in name denote which of `d`, `u`, `b`, `i` build modes it handles. Build modes are just acronyms from `download`, `build`, `unpack`, `install`.  
 
 As for version signature, the `du_github` and similar functions understand versions as tag names or as branch names combined with changeset id, like: `foobar:master^HEAD` or `foobar:myfeature^0987fe4`.
