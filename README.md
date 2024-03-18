@@ -82,7 +82,7 @@ Full list of ready-made functions can be seen in the `db.inc` file. We have some
 
 ## Assumed version naming
 
-As for version signature, the `du_github` and similar functions take versions as tag names or as branch names combined with changeset id, like: `foobar:some_tag`, `foobar:master^HEAD` or `foobar:myfeaturebranch^0987fe4`.
+As for version signature, the `du_github` and similar functions take versions as tag names or as branch names combined with changeset id, like: `foobar:some_tag`, `foobar:HEAD^master` or `foobar:0987fe4^myfeaturebranch`.
 
 ## Command line arguments handling
 
