@@ -117,6 +117,8 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__QUEUE_SUFFIX__" "$PSUBMIT_OPTS_QUEUE_SUFFIX"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NODETYPE__" "$PSUBMIT_OPTS_NODETYPE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__RESOURCE_HANDLING__" "$PSUBMIT_OPTS_RESOURCE_HANDLING"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__GENERIC_RESOURCE__" "$PSUBMIT_OPTS_GENERIC_RESOURCE"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__CONSTRAIN__" "$PSUBMIT_OPTS_CONSTRAIN"))
     repl=$(echo "${repl}" $(construct_replacement_command "__PPN__" "$PSUBMIT_OPTS_PPN"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NTH__" "$PSUBMIT_OPTS_NTH"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NGPUS__" "$PSUBMIT_OPTS_NGPUS"))
