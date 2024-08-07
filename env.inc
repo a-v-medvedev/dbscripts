@@ -1,6 +1,3 @@
-printenv > aaa
-[ -z "$DBSCRIPTSDIR" ] && DBSCRIPTSDIR=dbscripts
-which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DBSCRIPTSDIR/module.inc
 
 function update_setting() {
   local yaml=$1
@@ -178,11 +175,34 @@ function parse_special_yamls() {
   done
 }
 
-cfg=$1
-[ -f "$1" ] || fatal "can't open main config: $cfg"
+DBSCRIPTSDIR=$1
+cfg=$2
+[ -z "$DBSCRIPTSDIR" ] && DBSCRIPTSDIR=dbscripts
+[ -z "$cfg" ] && cfg=dnb.yaml
+
+source $DBSCRIPTSDIR/base.inc
+source $DBSCRIPTSDIR/funcs.inc
+source $DBSCRIPTSDIR/compchk.inc
+source $DBSCRIPTSDIR/envchk.inc
+source $DBSCRIPTSDIR/db.inc
+source $DBSCRIPTSDIR/apps.inc
+
+which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DBSCRIPTSDIR/module.inc
+
+[ -f "$cfg" ] || fatal "can't open main config: $cfg"
 exec_preamble_yaml $cfg
 parse_special_yamls $cfg
 parse_cfg_yaml $cfg
-printenv > bbb
+
+started=$(date "+%s")
+echo "Download and build started at timestamp: $started."
+environment_check_main || fatal "Environment is not supported, exiting"
+
+echo ">> Package list: $DNB_PACKAGES"
+
 exec_script_yaml $cfg
+
+finished=$(date "+%s")
+echo "----------"
+echo "Full operation time: $(expr $finished - $started) seconds."
 

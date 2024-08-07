@@ -33,23 +33,23 @@
 function dubi_main {
     touch .saved_pkg_records
 	set +u
-	local override_versions="${PACKAGE_VERSIONS}"
+	local override_versions="${DNB_PACKAGE_VERSIONS}"
     local dependencies=""
-    [ -z "$*" ] && dependencies="${PACKAGE_DEPS}"
-    is_any_char_present "$*" ":" || dependencies="${PACKAGE_DEPS}"
+    [ -z "$*" ] && dependencies="${DNB_PACKAGE_DEPS}"
+    is_any_char_present "$*" ":" || dependencies="${DNB_PACKAGE_DEPS}"
     set -u
     local default_build_mode="$(get_default_build_mode)"
     
-    local what_to_build=$(expand_mode_string "$*" "$PACKAGES" "$dependencies" "$default_build_mode")
+    local what_to_build=$(expand_mode_string "$*" "$DNB_PACKAGES" "$dependencies" "$default_build_mode")
     
 	local was_installed=""
 
-	local LIST1=$(print_all_exec_files "$TARGET_DIRS")
+	local LIST1=$(print_all_exec_files "$DNB_TARGET_DIRS")
 	#---
 	for pkgver in $what_to_build; do
         local pkg=$(get_field "$pkgver" 1) 
 		local mode=$(mode_for_pkg ${pkg} "$what_to_build")
-		local version=$(version_for_pkg ${pkg} "${VERSIONS}" "${override_versions}" "${what_to_build}")
+		local version=$(version_for_pkg ${pkg} "${DNB_VERSIONS}" "${override_versions}" "${what_to_build}")
         if [ ! -z "$mode" ]; then
     		eval dnb_${pkg} mode=$mode version=$version
         fi
@@ -59,7 +59,7 @@ function dubi_main {
         check_bash_func_declared dnb_sandbox && dnb_sandbox
     fi
 	#---
-	LIST2=$(print_all_exec_files "$TARGET_DIRS" "$started")
+	LIST2=$(print_all_exec_files "$DNB_TARGET_DIRS" "$started")
 	if [ ! -z "$was_installed" ]; then
 		echo -ne "----------\nExecutables before build start: (unix-time, size, name)\n$LIST1"
 		echo -ne "----------\nExecutables after build finish: (unix-time, size, name)\n$LIST2"
