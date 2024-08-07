@@ -108,6 +108,17 @@ function construct_replacement_command() {
     echo "s!$from!$to!;"
 }
 
+function generate_psubmit_opt() {
+    local dir=$1
+    set +u
+    echo > $dir/psubmit.opt
+    for i in QUEUE_NAME QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPI_SCRIPT BATCH_SCRIPT WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
+        local varname=PSUBMIT_OPT_$i
+        [ -z "${!varname}" ] || echo "$i=${!varname}" >> $dir/psubmit.opt
+    done
+    set -u
+}
+
 function template_to_psubmitopts {
     local dir=$1
     local suffix="$2"
@@ -118,7 +129,7 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__NODETYPE__" "$PSUBMIT_OPTS_NODETYPE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__RESOURCE_HANDLING__" "$PSUBMIT_OPTS_RESOURCE_HANDLING"))
     repl=$(echo "${repl}" $(construct_replacement_command "__GENERIC_RESOURCES__" "$PSUBMIT_OPTS_GENERIC_RESOURCES"))
-    repl=$(echo "${repl}" $(construct_replacement_command "__CONSTRAIN__" "$PSUBMIT_OPTS_CONSTRAIN"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__CONSTRAINT__" "$PSUBMIT_OPTS_CONSTRAINT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__PPN__" "$PSUBMIT_OPTS_PPN"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NTH__" "$PSUBMIT_OPTS_NTH"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NGPUS__" "$PSUBMIT_OPTS_NGPUS"))
@@ -127,13 +138,14 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__MPI_SCRIPT__" "$PSUBMIT_OPTS_MPI_SCRIPT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__BATCH_SCRIPT__" "$PSUBMIT_OPTS_BATCH_SCRIPT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__WHITELIST__" "$PSUBMIT_OPTS_WHITELIST"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__BLACKLIST__" "$PSUBMIT_OPTS_BLACKLIST"))
     repl=$(echo "${repl}" $(construct_replacement_command "__ACCOUNT__" "$PSUBMIT_OPTS_ACCOUNT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__COMMENT__" "$PSUBMIT_OPTS_COMMENT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__BEFORE__" "$PSUBMIT_OPTS_BEFORE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__AFTER__" "$PSUBMIT_OPTS_AFTER"))
-    repl=$(echo "${repl}" $(construct_replacement_command "__BLACKLIST__" "$PSUBMIT_OPTS_BLACKLIST"))
     repl=$(echo "${repl}" $(construct_replacement_command "__TIME_LIMIT__" "$PSUBMIT_OPTS_TIME_LIMIT"))
-    #repl=$(echo "${repl}" $(construct_replacement_command "__BATCH_SCRIPT__" "$PSUBMIT_OPTS_BATCH_SCRIPT"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__TARGET_BIN__" "$PSUBMIT_OPTS_TARGET_BIN"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__JOB_NAME__" "$PSUBMIT_OPTS_JOB_NAME"))
     if [ "$suffix" == "" ]; then
         cat psubmit.opt.TEMPLATE | sed "$repl" > $dir/psubmit.opt
     else
