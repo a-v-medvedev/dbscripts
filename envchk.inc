@@ -2,7 +2,7 @@
 #
 # BSD 3-Clause License
 #
-# Copyright (c) 2019-2021, Boris Krasnopolsky, Alexey Medvedev
+# Copyright (c) 2019-2024, Boris Krasnopolsky, Alexey Medvedev
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -137,19 +137,21 @@ function environment_check {
     working_dir_check
     set_defaults 
     set +u
-    if [ -z "$DNB_NOCMAKE" ]; then
-        verify_cmake_version "$CMAKE_MINIMAL_VERSION" || return 1
+    if [ -v DNB_CHECK_CMAKE ]; then
+        local version="$CMAKE_MINIMAL_VERSION"
+        [ -z "$DNB_CHECK_CMAKE" ] || version=$DNB_CHECK_CMAKE
+        verify_cmake_version "$version" || return 1
     fi
-    if [ -z "$DNB_NOCCOMP" ]; then
+    if [ -v "DNB_CHECK_CCOMP" ]; then
         verify_compiler_version c "$CC" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
     fi
-    if [ -z "$DNB_NOCXXCOMP" ]; then
+    if [ -v "DNB_CHECK_CXXCOMP" ]; then
         verify_compiler_version cpp "$CXX" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
     fi
-    if [ -z "$DNB_NOCCOMP" ]; then
+    if [ -v "DNB_CHECK_MPI_CCOMP" ]; then
         verify_compiler_version c "$MPICC" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
     fi
-    if [ -z "$DNB_NOCXXCOMP" ]; then
+    if [ -v "DNB_CHECK_MPI_CXXCOMP" ]; then
         verify_compiler_version cpp "$MPICXX" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
     fi
     [ ! -d "$INSTALL_DIR" ] && fatal "target directory $INSTALL_DIR doesn't exist."
@@ -160,20 +162,18 @@ function environment_check {
 function environment_check_cuda {
     set_defaults
     cuda_home_dir_set
-    verify_cuda_version "$CUDA_HOME/bin/nvcc" "$CUDA_MINIMAL_VERSION" || return 1
+    local version="$CUDA_MINIMAL_VERSION"
+    [ -z "$DNB_CHECK_CUDA" ] || version="$DNB_CHECK_CUDA" 
+    verify_cuda_version "$CUDA_HOME/bin/nvcc" "$version" || return 1
 }
 
 function environment_check_main {
     set +u
-    [ -z "$env_init_global_is_declared" ] && check_if_bash_func_declared "env_init_global"
     [ -z "$env_init_is_declared" ] && check_if_bash_func_declared "env_init"
-    if [ "$env_init_global_is_declared" == "1" ]; then
-        env_init_global
-    fi
     set -u
     environment_check
     set +u
-    [ -z "$DNB_NOCUDA" ] && environment_check_cuda
+    [ -v "DNB_CHECK_CUDA" ] && environment_check_cuda
     set -u
     return $?
 }

@@ -1,4 +1,3 @@
-
 function update_setting() {
   local yaml=$1
   local group=$2
@@ -10,7 +9,7 @@ function update_setting() {
       local val=${!variable_name}
       set -u
       [ -z "$val" ] || { echo "WARNING: overriding $group/$setting setting is ignored in $yaml: preserved value $variable_name=$val"; return; }
-      export $variable_name=$(cat $yaml | yq ".$group.$setting")
+      export $variable_name="$(cat $yaml | yq ".$group.$setting")"
     fi
   fi
 }
@@ -158,6 +157,7 @@ function exec_preamble_yaml() {
 
 function exec_script_yaml() {
   local yaml=$1
+  shift
   nlines=$(cat $yaml | yq '.script | length')
   [ "$nlines" == 0 ] && return
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
@@ -175,24 +175,23 @@ function parse_special_yamls() {
   done
 }
 
-DBSCRIPTSDIR=$1
-cfg=$2
-[ -z "$DBSCRIPTSDIR" ] && DBSCRIPTSDIR=dbscripts
-[ -z "$cfg" ] && cfg=dnb.yaml
+[ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
+[ -z "$DNB_CONFIG" ] && DNB_CONFIG=dnb.yaml
 
-source $DBSCRIPTSDIR/base.inc
-source $DBSCRIPTSDIR/funcs.inc
-source $DBSCRIPTSDIR/compchk.inc
-source $DBSCRIPTSDIR/envchk.inc
-source $DBSCRIPTSDIR/db.inc
-source $DBSCRIPTSDIR/apps.inc
+source $DNB_DBSCRIPTSDIR/base.inc
+source $DNB_DBSCRIPTSDIR/funcs.inc
+source $DNB_DBSCRIPTSDIR/compchk.inc
+source $DNB_DBSCRIPTSDIR/envchk.inc
+source $DNB_DBSCRIPTSDIR/db.inc
+source $DNB_DBSCRIPTSDIR/apps.inc
 
-which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DBSCRIPTSDIR/module.inc
+which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DNB_DBSCRIPTSDIR/module.inc
 
-[ -f "$cfg" ] || fatal "can't open main config: $cfg"
-exec_preamble_yaml $cfg
-parse_special_yamls $cfg
-parse_cfg_yaml $cfg
+
+[ -f "$DNB_CONFIG" ] || fatal "can't open main config: $DNB_CONFIG"
+exec_preamble_yaml "$DNB_CONFIG"
+parse_special_yamls "$DNB_CONFIG"
+parse_cfg_yaml "$DNB_CONFIG"
 
 started=$(date "+%s")
 echo "Download and build started at timestamp: $started."
@@ -200,7 +199,7 @@ environment_check_main || fatal "Environment is not supported, exiting"
 
 echo ">> Package list: $DNB_PACKAGES"
 
-exec_script_yaml $cfg
+exec_script_yaml "$DNB_CONFIG" $*
 
 finished=$(date "+%s")
 echo "----------"
