@@ -150,7 +150,7 @@ function exec_preamble_yaml() {
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
     local line=$(cat $yaml | yq ".preamble[$i]")
     [ "$line" == "null" ] && continue
-    echo $line
+    #echo $line
     eval $line
   done
 }
@@ -168,10 +168,10 @@ function exec_script_yaml() {
   done
 }
 
-function parse_special_yamls() {
+function parse_specific_yamls() {
   local yaml=$1
   for spec in $(cat $yaml | yq '.specific | join(" ")'); do
-    [ -f "$spec" ] && parse_cfg_yaml "$spec"
+    [ -f "$spec" ] && echo ">> Processing $spec:" && parse_cfg_yaml "$spec"
   done
 }
 
@@ -190,7 +190,7 @@ which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DNB
 
 [ -f "$DNB_CONFIG" ] || fatal "can't open main config: $DNB_CONFIG"
 exec_preamble_yaml "$DNB_CONFIG"
-parse_special_yamls "$DNB_CONFIG"
+parse_specific_yamls "$DNB_CONFIG"
 parse_cfg_yaml "$DNB_CONFIG"
 
 started=$(date "+%s")
