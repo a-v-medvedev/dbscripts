@@ -163,7 +163,7 @@ function exec_script_yaml() {
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
     local line=$(cat $yaml | yq ".script[$i]")
     [ "$line" == "null" ] && continue
-    echo $line
+    echo ">> dbscripts: EXECUTE: " $line
     eval $line
   done
 }
@@ -171,7 +171,7 @@ function exec_script_yaml() {
 function parse_specific_yamls() {
   local yaml=$1
   for spec in $(cat $yaml | yq '.specific | join(" ")'); do
-    [ -f "$spec" ] && echo ">> Processing $spec:" && parse_cfg_yaml "$spec"
+    [ -f "$spec" ] && echo ">> dbscripts: Processing $spec:" && parse_cfg_yaml "$spec"
   done
 }
 
@@ -197,7 +197,7 @@ started=$(date "+%s")
 echo "Download and build started at timestamp: $started."
 environment_check_main || fatal "Environment is not supported, exiting"
 
-echo ">> Package list: $DNB_PACKAGES"
+echo ">> dbscripts: Package list: $DNB_PACKAGES"
 
 exec_script_yaml "$DNB_YAML_CONFIG" $*
 
