@@ -30,6 +30,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+function fail_if_variable_not_defined() {
+    for v in $*; do
+        [ -v $v ] || fatal "the required variable \"$v\" is not defined."
+       [ -z "${!v}" ] && fatal "the required variable \"$v\" is not set."
+    done
+}
+
 function is_set_to_true() {
     local varname=$1
     set +u
