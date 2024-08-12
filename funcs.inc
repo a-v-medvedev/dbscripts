@@ -136,7 +136,7 @@ function generate_psubmit_opt() {
     echo > $dir/psubmit.opt
     for i in QUEUE_NAME QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPI_SCRIPT BATCH_SCRIPT WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
         local varname=PSUBMIT_OPT_$i
-        [ -z "${!varname}" ] || echo "$i=${!varname}" >> $dir/psubmit.opt
+        [ -z "${!varname}" ] || echo "$i=\"${!varname}\"" >> $dir/psubmit.opt
     done
     set -u
 }
