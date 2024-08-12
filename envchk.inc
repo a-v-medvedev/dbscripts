@@ -60,8 +60,8 @@ function verify_cuda_version {
     echo "$vout" | grep -q 'nvcc: NVIDIA (R) Cuda compiler driver' || fatal "can't detect CUDA version"
     echo "$vout" | grep -q 'Cuda compilation tools, release' || fatal "can't detect CUDA version"
     export cudavers=$(echo "$vout" | awk 'BEGIN{RS=","} /release/ { print $2 }')
-    version_is_less "$cudavers" "$cudaminvers" && fatal "CUDA version from path $CUDA_HOME is $cudavers; it is not supported; minimal supported version is ${cudaminvers}. NOTE: set DNB_NOCUDA environment variable to omit all CUDA checks.";
-    info "Using CUDA path ${CUDA_HOME}, version: ${cudavers}" 
+    version_is_less "$cudavers" "$cudaminvers" && fatal "CUDA version from path $DNB_CUDA_HOME is $cudavers; it is not supported; minimal supported version is ${cudaminvers}.";
+    info "Using CUDA path ${DNB_CUDA_HOME}, version: ${cudavers}" 
     return 0
 }
 
@@ -69,7 +69,7 @@ function verify_cmake_version() {
     local cmakeminvers="$1"
     [ -z "$(which cmake)" ] && fatal "no cmake in PATH"
     local cmakevers=$(cmake --version | head -n 1 | awk '{print $3}')
-	version_is_less "$cmakevers" "$cmakeminvers" && fatal "cmake of version $CMAKE_VERSION is not supported; minimal supported version is $DNB_CMAKE_MINIMAL_VERSION. NOTE: set DNB_NOCMAKE environment variable to omit cmake check."
+	version_is_less "$cmakevers" "$cmakeminvers" && fatal "cmake of version $CMAKE_VERSION is not supported; minimal supported version is $DNB_CMAKE_MINIMAL_VERSION."
 	info "Using cmake version $cmakevers";
 	return 0
 }
@@ -89,22 +89,31 @@ function working_dir_check {
 
 function verify_if_file_presents_in_cuda_path() {
     local file="$1"
-    [ -f "$CUDA_HOME"/"$file" ] || fatal "can't find $file in CUDA path"
+    [ -f "$DNB_CUDA_HOME"/"$file" ] || fatal "can't find $file in CUDA path"
 }
 
 function cuda_home_dir_set {
     set +u
     if [ -z "$CUDA_HOME" ]; then
         local nvccbinary=$(which nvcc 2>/dev/null)
-        [ -z "$nvccbinary" ] && fatal "can't find nvcc. Is CUDA in PATH? NOTE: set DNB_NOCUDA environment variable to omit all CUDA checks."
-        export CUDA_HOME=$(get_uplevel_dir "$nvccbinary")
+        [ -z "$nvccbinary" ] && fatal "can't find nvcc. Is CUDA in PATH?"
+        export DNB_CUDA_HOME=$(get_uplevel_dir "$nvccbinary")
+    else 
+        DNB_CUDA_HOME=$CUDA_HOME    
     fi
     set -u
     verify_if_file_presents_in_cuda_path bin/nvcc
-    #verify_if_file_presents_in_cuda_path lib64/libnvToolsExt.so
-    #verify_if_file_presents_in_cuda_path lib64/libcudart.so
-    #verify_if_file_presents_in_cuda_path lib/x86_64-linux-gnu/libnvToolsExt.so
-    #verify_if_file_presents_in_cuda_path lib/x86_64-linux-gnu/libcudart.so
+    local nvtx=0
+    local cudart=0
+    for i in lib/x86_64-linux-gnu/libnvToolsExt.so lib64/libnvToolsExt.so ../cuda/lib64/libnvToolsExt.so; do
+        [ -f "$DNB_CUDA_HOME"/$i ] && nvtx=$(expr "$nvtx" \+ 1) && export DNB_CUDA_EXT_PATH=$(dirname "$DNB_CUDA_HOME/$i")
+    done
+    for i in lib/x86_64-linux-gnu/libcudart.so lib64/libcudart.so ../cuda/lib64/libcudart.so; do
+        [ -f "$DNB_CUDA_HOME"/$i ] && cudart=$(expr "$cudart" \+ 1) 
+    done
+    [ "$nvtx" == "0" -o "$cudart" == "0" ] && fatal "can't find library libcudart.so or libnvToolsExt.so in CUDA path"
+    [ -f "$DNB_CUDA_EXT_PATH/libnvToolsExt.so" ] || fatal "can't find libnvToolsExt.so in CUDA path"
+    [ -f "$DNB_CUDA_EXT_PATH/libcudart.so" ] || fatal "can't find libcudart.so in CUDA path"
 }
 
 function set_variable_if_not_defined() {
@@ -163,7 +172,7 @@ function environment_check_cuda {
     cuda_home_dir_set
     local version="$DNB_CUDA_MINIMAL_VERSION"
     [ -z "$DNB_CHECK_CUDA" ] || version="$DNB_CHECK_CUDA" 
-    verify_cuda_version "$CUDA_HOME/bin/nvcc" "$version" || return 1
+    verify_cuda_version "$DNB_CUDA_HOME/bin/nvcc" "$version" || return 1
 }
 
 function environment_check_main {

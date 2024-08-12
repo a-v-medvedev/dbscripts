@@ -176,7 +176,6 @@ function parse_specific_yamls() {
 }
 
 function remove_temps() {
-  set -x
   cd $DNB_INSTALL_DIR
   rm -f .dnb.script.*
 }
