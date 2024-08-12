@@ -274,7 +274,7 @@ function bi_cmake() {
         cd build
         cmake $opts -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/${proj}-${VER} $cmpath
         make clean
-        make -j${MAKE_PARALLEL_LEVEL}
+        make -j${DNB_MAKE_PARALLEL_LEVEL}
         cd $INSTALL_DIR
     fi
     if this_mode_is_set 'i' "$m"; then
@@ -301,7 +301,7 @@ function bi_autoconf_make() {
         ./configure $opts --prefix=$INSTALL_DIR/${pkg}-${VER}
 	set +x
         make clean
-        make -j $MAKE_PARALLEL_LEVEL
+        make -j $DNB_MAKE_PARALLEL_LEVEL
         cd $INSTALL_DIR
     fi
     if this_mode_is_set 'i' "$m"; then
@@ -323,7 +323,7 @@ function bi_make() {
         [ ! -e ${proj}-${VER}.src ] && fatal "${proj}: no source directory to build"
         cd ${proj}-${VER}.src
         eval "$COMMANDS"
-        make -j $MAKE_PARALLEL_LEVEL $PARAMS
+        make -j $DNB_MAKE_PARALLEL_LEVEL $PARAMS
         cd $INSTALL_DIR
     fi
 }

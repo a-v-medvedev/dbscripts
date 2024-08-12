@@ -106,19 +106,15 @@ The list of packages that are expected in set in the mandatory `PACKAGES` variab
 
 A couple of external environment variables can be provided to modify the behaviour of the script. 
 
-- `export DNB_NOCUDA=TRUE` -- omit CUDA environment minimal version check
-- `export DNB_NOCMAKE=TRUE` -- omit CMake minimal version check
-- `export DNB_NOCCOMP` -- omit minimal version check for C compiler
-- `export DNB_NOCXXCOMP=1` -- omit minimal version check for C++ compiler
-- `export PACKAGE_VERSIONS="PACKAGE:VERSION PACKAGE:VERSION ..."` -- override some of the package versions defined by mandatory `VERSIONS` variable from `dnb.sh`
-- `export DEFAULT_BUILD_MODE=":[d][u][b][i]"` -- override the default build mode (default is `:dubi`)
-- `export MAKE_PARALLEL_LEVEL=N` -- set the assumed argument for `-j` key when `make` utility is called.
+- `export DNB_PACKAGE_VERSIONS="PACKAGE:VERSION PACKAGE:VERSION ..."` -- override some of the package versions defined by mandatory `VERSIONS` variable from `dnb.sh`
+- `export DNB_DEFAULT_BUILD_MODE=":[d][u][b][i]"` -- override the default build mode (default is `:dubi`)
+- `export DNB_MAKE_PARALLEL_LEVEL=N` -- set the assumed argument for `-j` key when `make` utility is called.
 
 ## Environment file and environment settings
 
 It is supposed that `dnb.sh` script includes the local `env.sh` file. We expect this file to have two bash functions:
 
-- `env_init_global()` -- this function is called by `environment_check_main()` subroutine. It is supposed to load all necesary modules and set all the paths and environment variables. We also may set the variables from "External environment variables" list (for example, the `MAKE_PARALLEL_LEVEL` is good fit to set here).
+- `env_init_global()` -- this function is called by `environment_check_main()` subroutine. It is supposed to load all necesary modules and set all the paths and environment variables. We also may set the variables from "External environment variables" list (for example, the `DNB_MAKE_PARALLEL_LEVEL` is good fit to set here).
 - `env_init(package)` -- this function is meant to be package specific and is called by `environment_check_specific "$pkg"` subroutine. We normally call it from each specific `dnb_package` function. Here it is reasonable to set package-cpecific environment variables. It is better to name those variables using some package-related prefix.
 
 

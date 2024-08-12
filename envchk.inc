@@ -130,7 +130,7 @@ function set_defaults {
     set_variable_if_not_defined CLANG_MINIMAL_VERSION "7.0.0"
     set_variable_if_not_defined CUDA_MINIMAL_VERSION "7.0"
 
-    set_variable_if_not_defined MAKE_PARALLEL_LEVEL 8
+    set_variable_if_not_defined DNB_MAKE_PARALLEL_LEVEL 8
 }
 
 function environment_check {

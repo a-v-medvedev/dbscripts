@@ -243,7 +243,7 @@ function dnb_nemo() {
 %USER_LIB            %NCDF_LIB %XIOS_LIB
 EOF
         set +u
-        [ -z "$NEMO_MAKE_PARALLEL_LEVEL" ] && NEMO_MAKE_PARALLEL_LEVEL=$MAKE_PARALLEL_LEVEL
+        [ -z "$NEMO_MAKE_PARALLEL_LEVEL" ] && NEMO_MAKE_PARALLEL_LEVEL=$DNB_MAKE_PARALLEL_LEVEL
         set -u
         echo y | ./makenemo -n "$NEMO_CFG" clean_config || true
         set -x

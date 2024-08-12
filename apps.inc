@@ -322,7 +322,7 @@ function dnb_tensorflow() {
         local ram=$(free -m -w | awk '/available/ { for (i=1;i<=NF;i++) if ($i == "available") FLD=i+1; } /Mem:/ { print int($FLD / 8 * 7)  }')
         $INSTALL_DIR/bazelisk.bin/bazelisk clean
         rm -rf ~/.cache/bazel $INSTALL_DIR/_cache
-        BAZELISK_HOME=$cache_dir $INSTALL_DIR/bazelisk.bin/bazelisk --output_user_root=$cache_dir build tensorflow:tensorflow_cc tensorflow:install_headers --jobs=$MAKE_PARALLEL_LEVEL --local_ram_resources=$ram
+        BAZELISK_HOME=$cache_dir $INSTALL_DIR/bazelisk.bin/bazelisk --output_user_root=$cache_dir build tensorflow:tensorflow_cc tensorflow:install_headers --jobs=$DNB_MAKE_PARALLEL_LEVEL --local_ram_resources=$ram
 		cd $INSTALL_DIR
     fi
     [ -e ${pkg}-${V} ] && rm -rf ${pkg}-${V}
