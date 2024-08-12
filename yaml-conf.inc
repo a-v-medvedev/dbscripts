@@ -122,24 +122,24 @@ function parse_cfg_yaml() {
   update_setting $yaml psubmit mpi_script PSUBMIT_OPT_MPI_SCRIPT
   update_setting $yaml psubmit batch_script PSUBMIT_OPT_BATCH_SCRIPT
 
-#  if [ "$(cat $yaml | yq '.settings')" != "null" ]; then
-#    if [ "$(cat $yaml | yq '.settings.parallel_level')" != "null" ]; then
-#      set +u
-#      local val=$DNB_MAKE_PARALLEL_LEVEL
-#      set -u
-#      [ -z "$val" ] || { echo "WARNING: overriding parallel_level setting is ignored in $yaml: preserved value DNB_MAKE_PARALLEL_LEVEL=$val"; return; }
-#      export DNB_MAKE_PARALLEL_LEVEL=$(cat $yaml | yq '.settings.parallel_level')
-#    fi
-#  fi
-#
-#  if [ "$(cat $yaml | yq '.default_mode')" != "null" ]; then
-#    if [ "$(cat $yaml | yq '.settings.default_mode')" != "null" ]; then
-#      set +u
-#      [ -z "$DNB_MAKE_PARALLEL_LEVEL" ] || { echo "WARNING: overriding default_mode setting is ignored in $yaml: preserved value DEFAULT_BUILD_MODE=$DEFAULT_BUILD_MODE"; return; }
-#      export DEFAULT_BUILD_MODE=$(cat $yaml | yq '.settings.default_mode')
-#    fi
-#  fi
-
+  if [ "$(cat $yaml | yq '.per-package')" != "null" ]; then
+    local pkgs=$(cat $yaml | yq '.per-package | keys | .[]')
+    if [ "$pkgs" != "null" ]; then
+      for pkg in $pkgs; do
+        local v=DNB_PACKAGE_INIT_SCRIPT__$(echo "$pkg" | sed 's/-/_/g')
+        [ -v $v ] && echo "WARNING: not overriding the per-package script for package: $pkg" && continue
+        local script_file_name=$PWD/$(mktemp .dnb.script.XXXXXXXX)
+        cat $yaml | yq ".per-package.$pkg[0]" > "$script_file_name"
+        [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && eval $v=$script_file_name
+        #if [ -v $v ]; then
+        #  echo ">>>>  >>>> $v:"
+        #  cat "${!v}" 
+        #  echo ">>>>>>>>>>"
+        #  export $v
+        #fi
+      done
+    fi
+  fi
 }
 
 

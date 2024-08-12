@@ -187,5 +187,7 @@ function environment_check_specific {
             return $?
         fi
     fi
+    local v=DNB_PACKAGE_INIT_SCRIPT__$(echo "$name" | sed 's/-/_/g')
+    [ -v $v ] && source ${!v}
     return 0
 }
