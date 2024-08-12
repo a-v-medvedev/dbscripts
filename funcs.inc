@@ -30,6 +30,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+function is_set_to_true() {
+    local varname=$1
+    set +u
+    [ -z "${!varname}" -o "${!varname}" == 0 -o "${!varname}" == false -o "${!varname}" == FALSE ] && return 1
+    set -u
+    return 0
+}
+
+function beginswith() {
+    case $1 in
+        $2*) return 0;;
+        *) return 1;;
+    esac
+}
+
 function find_including_paths() {
     for i in $(seq 1 $#); do
         local p=$(eval echo \"\$$i\")

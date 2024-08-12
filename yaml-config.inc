@@ -176,7 +176,7 @@ function parse_specific_yamls() {
 }
 
 [ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
-[ -z "$DNB_CONFIG" ] && DNB_CONFIG=dnb.yaml
+[ -z "$DNB_YAML_CONFIG" ] && DNB_YAML_CONFIG=dnb.yaml
 
 source $DNB_DBSCRIPTSDIR/base.inc
 source $DNB_DBSCRIPTSDIR/funcs.inc
@@ -188,10 +188,10 @@ source $DNB_DBSCRIPTSDIR/apps.inc
 which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DNB_DBSCRIPTSDIR/module.inc
 
 
-[ -f "$DNB_CONFIG" ] || fatal "can't open main config: $DNB_CONFIG"
-exec_preamble_yaml "$DNB_CONFIG"
-parse_specific_yamls "$DNB_CONFIG"
-parse_cfg_yaml "$DNB_CONFIG"
+[ -f "$DNB_YAML_CONFIG" ] || fatal "can't open main config: $DNB_YAML_CONFIG"
+exec_preamble_yaml "$DNB_YAML_CONFIG"
+parse_specific_yamls "$DNB_YAML_CONFIG"
+parse_cfg_yaml "$DNB_YAML_CONFIG"
 
 started=$(date "+%s")
 echo "Download and build started at timestamp: $started."
@@ -199,7 +199,7 @@ environment_check_main || fatal "Environment is not supported, exiting"
 
 echo ">> Package list: $DNB_PACKAGES"
 
-exec_script_yaml "$DNB_CONFIG" $*
+exec_script_yaml "$DNB_YAML_CONFIG" $*
 
 finished=$(date "+%s")
 echo "----------"
