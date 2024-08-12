@@ -95,8 +95,11 @@ function dnb_yaml-cpp() {
     local V=$(get_field "$2" 2 "=")
     [ "$(check_this_pkg_record $pkg $V $m)" == "cached" ] && return 0
     du_github "jbeder" "yaml-cpp" "yaml-cpp-" "$V" "$m"
+    if this_mode_is_set 'u' "$m"; then
+        sed -i '/target_compile_options(yaml-cpp/,+15d' ${pkg}.src/CMakeLists.txt
+    fi
     local OPTS=""
-    OPTS="$OPTS -DBUILD_SHARED_LIBS=OFF"
+    OPTS="$OPTS -DYAML_BUILD_SHARED_LIBS=OFF"
     OPTS="$OPTS -DYAML_CPP_BUILD_TESTS=OFF"
     OPTS="$OPTS -DYAML_CPP_BUILD_TOOLS=OFF"
     OPTS="$OPTS -DYAML_CPP_BUILD_CONTRIB=OFF"
