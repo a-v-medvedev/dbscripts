@@ -81,9 +81,9 @@ function dnb_xios() {
 
     if this_mode_is_set 'b' "$m"; then
         set +u
-        set_path_variable_if_missing NEMO HDF5 "$INSTALL_DIR/hdf5.bin"
-        set_path_variable_if_missing NEMO NETCDF_C "$INSTALL_DIR/netcdf-c.bin"
-        set_path_variable_if_missing NEMO NETCDF_FORTRAN "$INSTALL_DIR/netcdf-fortran.bin"
+        set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
+        set_path_variable_if_missing NEMO NETCDF_C "$DNB_INSTALL_DIR/netcdf-c.bin"
+        set_path_variable_if_missing NEMO NETCDF_FORTRAN "$DNB_INSTALL_DIR/netcdf-fortran.bin"
 
         [ -z "$XIOS_CCOMPILER" ] && XIOS_CCOMPILER="mpicc"
         [ -z "$XIOS_FCOMPILER" ] && XIOS_FCOMPILER="mpif90"
@@ -138,7 +138,7 @@ OASIS_LIBDIR=""
 OASIS_LIB=""
 EOF
         ./make_xios --netcdf_lib netcdf4_par --prod --arch dnb --job $XIOS_MAKE_PARALLEL_LEVEL || fatal "make_xios failed."
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i' "$m"; then
         [ -d "$pkg-$V" ] && rm -rf "$pkg-$V"
@@ -162,7 +162,7 @@ function dnb_nemo() {
     [ -z "$NEMO_WORKLOAD_ARCHIVE" ] && fatal "NEMO_WORKLOAD_ARCHIVE is required, must be set in env.sh"
     [ -z "$NEMO_WORKLOAD_MD5" ] && fatal "NEMO_WORKLOAD_MD5 is required, must be set in env.sh"
 
-    mkdatalink "$INSTALL_DIR" "$NEMO_WORKLOAD_ARCHIVE"
+    mkdatalink "$DNB_INSTALL_DIR" "$NEMO_WORKLOAD_ARCHIVE"
 
     if beginswith "$V" "4.0"; then
         du_svn "$pkg" "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V" "$V" "$m"
@@ -198,7 +198,7 @@ function dnb_nemo() {
                 fi
             fi
         fi
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'b' "$m"; then
         set +u
@@ -207,10 +207,10 @@ function dnb_nemo() {
         [ -z "$NEMO_KEYS_TO_DELETE" ] && fatal "NEMO_KEYS_TO_DELETE is not set"
         [ -z "$NEMO_KEYS_TO_ADD" ] && fatal "NEMO_KEYS_TO_ADD is not set"
 
-        set_path_variable_if_missing NEMO HDF5 "$INSTALL_DIR/hdf5.bin"
-        set_path_variable_if_missing NEMO NETCDF_C "$INSTALL_DIR/netcdf-c.bin"
-        set_path_variable_if_missing NEMO NETCDF_FORTRAN "$INSTALL_DIR/netcdf-fortran.bin"
-        set_path_variable_if_missing NEMO XIOS "$INSTALL_DIR/xios.bin"
+        set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
+        set_path_variable_if_missing NEMO NETCDF_C "$DNB_INSTALL_DIR/netcdf-c.bin"
+        set_path_variable_if_missing NEMO NETCDF_FORTRAN "$DNB_INSTALL_DIR/netcdf-fortran.bin"
+        set_path_variable_if_missing NEMO XIOS "$DNB_INSTALL_DIR/xios.bin"
 
         [ -z "$NEMO_CPP" ] && fatal "NEMO_CPP is not set"
         [ -z "$NEMO_CC" ] && fatal "NEMO_CC is not set"
@@ -249,7 +249,7 @@ EOF
         set -x
         ./makenemo -j $NEMO_MAKE_PARALLEL_LEVEL -r ORCA2_ICE_PISCES -n "$NEMO_CFG" -d "$NEMO_SUBCOMPONENTS" -m dnb add_key "$NEMO_KEYS_TO_ADD" del_key "$NEMO_KEYS_TO_DELETE" || fatal "makenemo failed."
         set +x
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
                 [ -x $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/nemo ] || fatal "makenemo failed."
     fi
     if this_mode_is_set 'i' "$m"; then
@@ -263,7 +263,7 @@ EOF
         fi
         cd "$pkg-$V"
         tar --skip-old-files -xvf "../${pkg}.dwn/$NEMO_WORKLOAD_ARCHIVE"
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     i_make_binary_symlink "$pkg" "${V}" "$m"
 }

@@ -69,20 +69,20 @@ function verify_cmake_version() {
     local cmakeminvers="$1"
     [ -z "$(which cmake)" ] && fatal "no cmake in PATH"
     local cmakevers=$(cmake --version | head -n 1 | awk '{print $3}')
-	version_is_less "$cmakevers" "$cmakeminvers" && fatal "cmake of version $CMAKE_VERSION is not supported; minimal supported version is $CMAKE_MINIMAL_VERSION. NOTE: set DNB_NOCMAKE environment variable to omit cmake check."
+	version_is_less "$cmakevers" "$cmakeminvers" && fatal "cmake of version $CMAKE_VERSION is not supported; minimal supported version is $DNB_CMAKE_MINIMAL_VERSION. NOTE: set DNB_NOCMAKE environment variable to omit cmake check."
 	info "Using cmake version $cmakevers";
 	return 0
 }
 
 function working_dir_check {
     set +u
-    [ ! -z "$INSTALL_DIR" ] && return 0
+    [ ! -z "$DNB_INSTALL_DIR" ] && return 0
     set -u
     [ -e "$0" ] && cs1=$(get_csum "$0")
     [ -e "$PWD/dnb.sh" ] && cs2=$(get_csum "$PWD/dnb.sh")
     if [ "$cs1" != "$cs2" ]; then
         info "NOTE: this script must be run from the directory it is in."
-        info "NOTE: set INSTALL_DIR evironment variable if custom build and install directory required."
+        info "NOTE: set DNB_INSTALL_DIR evironment variable if custom build and install directory required."
         fatal "can't continue from this current directory"
     fi
 }
@@ -121,14 +121,13 @@ function set_defaults {
     set_variable_if_not_defined CXX g++
     set_variable_if_not_defined MPICXX mpicxx
     set_variable_if_not_defined MPICC mpicc
-    set_variable_if_not_defined INSTALL_DIR $PWD
+    set_variable_if_not_defined DNB_INSTALL_DIR $PWD
 
-    set_variable_if_not_defined CMAKE_MINIMAL_VERSION "3.1.0"
-    set_variable_if_not_defined GCC_MINIMAL_VERSION "5.0.0"
-    set_variable_if_not_defined ICC_MINIMAL_VERSION "13.0.0"
-# to be corrected
-    set_variable_if_not_defined CLANG_MINIMAL_VERSION "7.0.0"
-    set_variable_if_not_defined CUDA_MINIMAL_VERSION "7.0"
+    set_variable_if_not_defined DNB_CMAKE_MINIMAL_VERSION "3.1.0"
+    set_variable_if_not_defined DNB_GCC_MINIMAL_VERSION "5.0.0"
+    set_variable_if_not_defined DNB_ICC_MINIMAL_VERSION "13.0.0"
+    set_variable_if_not_defined DNB_CLANG_MINIMAL_VERSION "7.0.0"
+    set_variable_if_not_defined DNB_CUDA_MINIMAL_VERSION "7.0"
 
     set_variable_if_not_defined DNB_MAKE_PARALLEL_LEVEL 8
 }
@@ -138,23 +137,23 @@ function environment_check {
     set_defaults 
     set +u
     if [ -v DNB_CHECK_CMAKE ]; then
-        local version="$CMAKE_MINIMAL_VERSION"
+        local version="$DNB_CMAKE_MINIMAL_VERSION"
         [ -z "$DNB_CHECK_CMAKE" ] || version=$DNB_CHECK_CMAKE
         verify_cmake_version "$version" || return 1
     fi
     if [ -v "DNB_CHECK_CCOMP" ]; then
-        verify_compiler_version c "$CC" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
+        verify_compiler_version c "$CC" "$DNB_GCC_MINIMAL_VERSION" "$DNB_ICC_MINIMAL_VERSION" "$DNB_CLANG_MINIMAL_VERSION" || return 1
     fi
     if [ -v "DNB_CHECK_CXXCOMP" ]; then
-        verify_compiler_version cpp "$CXX" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
+        verify_compiler_version cpp "$CXX" "$DNB_GCC_MINIMAL_VERSION" "$DNB_ICC_MINIMAL_VERSION" "$DNB_CLANG_MINIMAL_VERSION" || return 1
     fi
     if [ -v "DNB_CHECK_MPI_CCOMP" ]; then
-        verify_compiler_version c "$MPICC" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
+        verify_compiler_version c "$MPICC" "$DNB_GCC_MINIMAL_VERSION" "$DNB_ICC_MINIMAL_VERSION" "$DNB_CLANG_MINIMAL_VERSION" || return 1
     fi
     if [ -v "DNB_CHECK_MPI_CXXCOMP" ]; then
-        verify_compiler_version cpp "$MPICXX" "$GCC_MINIMAL_VERSION" "$ICC_MINIMAL_VERSION" "$CLANG_MINIMAL_VERSION" || return 1
+        verify_compiler_version cpp "$MPICXX" "$DNB_GCC_MINIMAL_VERSION" "$DNB_ICC_MINIMAL_VERSION" "$DNB_CLANG_MINIMAL_VERSION" || return 1
     fi
-    [ ! -d "$INSTALL_DIR" ] && fatal "target directory $INSTALL_DIR doesn't exist."
+    [ ! -d "$DNB_INSTALL_DIR" ] && fatal "target directory $DNB_INSTALL_DIR doesn't exist."
     set -u
     return 0
 }
@@ -162,7 +161,7 @@ function environment_check {
 function environment_check_cuda {
     set_defaults
     cuda_home_dir_set
-    local version="$CUDA_MINIMAL_VERSION"
+    local version="$DNB_CUDA_MINIMAL_VERSION"
     [ -z "$DNB_CHECK_CUDA" ] || version="$DNB_CHECK_CUDA" 
     verify_cuda_version "$CUDA_HOME/bin/nvcc" "$version" || return 1
 }

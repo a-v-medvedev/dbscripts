@@ -244,7 +244,7 @@ function du_svn() {
             cd ..
             tar czf "${pkg}-${VER}.tar.gz" "$pkg"
         fi
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'u' "$m"; then
         local archive="${pkg}.dwn/${pkg}-${VER}.tar.gz"
@@ -272,10 +272,10 @@ function bi_cmake() {
         [ -e build ] && rm -rf build
         mkdir -p build
         cd build
-        cmake $opts -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/${proj}-${VER} $cmpath
+        cmake $opts -DCMAKE_INSTALL_PREFIX=$DNB_INSTALL_DIR/${proj}-${VER} $cmpath
         make clean
         make -j${DNB_MAKE_PARALLEL_LEVEL}
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i' "$m"; then
         [ ! -e ${proj}-${VER}.src ] && fatal "${proj}: no source directory to install from"
@@ -283,7 +283,7 @@ function bi_cmake() {
         [ ! -e build ] && fatal "${proj}: no build directory in source tree"
         cd build
         make install
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
 }
 
@@ -298,33 +298,33 @@ function bi_autoconf_make() {
         cd ${pkg}-${VER}.src
         [ ! -z "$commands" ] && eval "$commands"
 	set -x
-        ./configure $opts --prefix=$INSTALL_DIR/${pkg}-${VER}
+        ./configure $opts --prefix=$DNB_INSTALL_DIR/${pkg}-${VER}
 	set +x
         make clean
         make -j $DNB_MAKE_PARALLEL_LEVEL
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i' "$m"; then
         [ ! -e ${pkg}-${VER}.src ] && fatal "${pkg}: no source directory to install from"
         cd ${pkg}-${VER}.src
         [ ! -z "$commands" ] && eval "$commands"
         make install
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
 }
 
 function bi_make() {
     local proj="$1"
     local VER="$2"
-    local COMMANDS="$3"
-    local PARAMS="$4"
+    local commands="$3"
+    local params="$4"
     local m="$5"
     if any_mode_is_set "bi" "$m"; then
         [ ! -e ${proj}-${VER}.src ] && fatal "${proj}: no source directory to build"
         cd ${proj}-${VER}.src
-        eval "$COMMANDS"
-        make -j $DNB_MAKE_PARALLEL_LEVEL $PARAMS
-        cd $INSTALL_DIR
+        eval "$commands"
+        make -j $DNB_MAKE_PARALLEL_LEVEL $params
+        cd $DNB_INSTALL_DIR
     fi
 }
 
@@ -345,23 +345,23 @@ function i_make_binary_symlink() {
     local VER="$2"
     local m="$3"
     if this_mode_is_set 'i' "$m"; then
-	    rm -f $INSTALL_DIR/${proj}.bin
-    	ln -s $INSTALL_DIR/${proj}-${VER} $INSTALL_DIR/${proj}.bin
-        rm -f $INSTALL_DIR/${proj}.src
-        ln -s $INSTALL_DIR/${proj}-${VER}.src $INSTALL_DIR/${proj}.src
+	    rm -f $DNB_INSTALL_DIR/${proj}.bin
+    	ln -s $DNB_INSTALL_DIR/${proj}-${VER} $DNB_INSTALL_DIR/${proj}.bin
+        rm -f $DNB_INSTALL_DIR/${proj}.src
+        ln -s $DNB_INSTALL_DIR/${proj}-${VER}.src $DNB_INSTALL_DIR/${proj}.src
     fi
 }
 
 function i_direct_copy() {
     local proj="$1"
     local VER="$2"
-    local FILES="$3"
+    local files="$3"
     local m="$4"
     if this_mode_is_set 'i' "$m"; then
         [ ! -e ${proj}-${VER}.src ] && fatal "${proj}: no source directory to install from"
         cd ${proj}-${VER}.src
-        mkdir -p $INSTALL_DIR/${proj}-${VER}
-        cp -r $FILES $INSTALL_DIR/${proj}-${VER}
-        cd $INSTALL_DIR
+        mkdir -p $DNB_INSTALL_DIR/${proj}-${VER}
+        cp -r $files $DNB_INSTALL_DIR/${proj}-${VER}
+        cd $DNB_INSTALL_DIR
     fi
 }

@@ -163,7 +163,7 @@ function exec_script_yaml() {
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
     local line=$(cat $yaml | yq ".script[$i]")
     [ "$line" == "null" ] && continue
-    echo ">> dbscripts: EXECUTE: " $line
+    echo ">> dbscripts: EXECUTE:" $line
     eval $line
   done
 }
@@ -173,6 +173,12 @@ function parse_specific_yamls() {
   for spec in $(cat $yaml | yq '.specific | join(" ")'); do
     [ -f "$spec" ] && echo ">> dbscripts: Processing $spec:" && parse_cfg_yaml "$spec"
   done
+}
+
+function remove_temps() {
+  set -x
+  cd $DNB_INSTALL_DIR
+  rm -f .dnb.script.*
 }
 
 [ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
@@ -187,14 +193,17 @@ source $DNB_DBSCRIPTSDIR/apps.inc
 
 which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DNB_DBSCRIPTSDIR/module.inc
 
+trap remove_temps EXIT
 
 [ -f "$DNB_YAML_CONFIG" ] || fatal "can't open main config: $DNB_YAML_CONFIG"
 exec_preamble_yaml "$DNB_YAML_CONFIG"
-parse_specific_yamls "$DNB_YAML_CONFIG"
-parse_cfg_yaml "$DNB_YAML_CONFIG"
 
 started=$(date "+%s")
 echo "Download and build started at timestamp: $started."
+
+parse_specific_yamls "$DNB_YAML_CONFIG"
+parse_cfg_yaml "$DNB_YAML_CONFIG"
+
 environment_check_main || fatal "Environment is not supported, exiting"
 
 echo ">> dbscripts: Package list: $DNB_PACKAGES"

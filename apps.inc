@@ -79,7 +79,7 @@ function dnb_psubmit() {
         local FILES=""
         cd ${pkg}-${V}.src
         FILES=$(ls -1 *.sh)
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
         rm -rf "$pkg"-"$V"
         i_direct_copy "$pkg" "$V" "$FILES" "$m"
         i_make_binary_symlink "$pkg" "${V}" "$m"
@@ -106,7 +106,7 @@ function dnb_yaml-cpp() {
         if [ -d "$pkg".bin/lib64 ]; then
             cd "$pkg".bin
             [ -e lib ] || ln -sf lib64 lib
-            cd $INSTALL_DIR
+            cd $DNB_INSTALL_DIR
         fi
     fi
     i_save_this_pkg_record "$pkg" "${V}" "$m"
@@ -124,10 +124,10 @@ function dnb_argsparser() {
     [ "$(check_this_pkg_record $pkg $V $m)" == "cached" ] && return 0
     du_github "a-v-medvedev" "argsparser" "v" "$V" "$m"
     if any_mode_is_set "bi" "$m"; then
-        [ -f "$INSTALL_DIR/yaml-cpp.bin/include/yaml-cpp/yaml.h" ] || fatal "$pkg: installed yaml-cpp is required to build"
+        [ -f "$DNB_INSTALL_DIR/yaml-cpp.bin/include/yaml-cpp/yaml.h" ] || fatal "$pkg: installed yaml-cpp is required to build"
     fi
     local COMMANDS=""
-    PARAMS="YAML_DIR=$INSTALL_DIR/yaml-cpp.bin WITH_SHARED_LIB=FALSE $argsparser_params"
+    PARAMS="YAML_DIR=$DNB_INSTALL_DIR/yaml-cpp.bin WITH_SHARED_LIB=FALSE $argsparser_params"
     b_make "$pkg" "$V" "$COMMANDS" "clean" "$m"
     b_make "$pkg" "$V" "$COMMANDS" "$PARAMS" "$m"
     local FILES="argsparser/include/argsparser.h argsparser/libargsparser.a"
@@ -146,10 +146,10 @@ function dnb_hypre() {
     local V=$(get_field "$2" 2 "=")
     du_github "hypre-space" "hypre" "v" "$V" "$m"
     if this_mode_is_set "u" "$m"; then
-        N=$(ls -1 $BSCRIPTSDIR/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
+        N=$(ls -1 $DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
         if [ "$N" -gt "0" ]; then
             cd ${pkg}-${V}.src
-            for p in ../$BSCRIPTSDIR/patch_${pkg}-${V}_*.diff; do
+            for p in ../$DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff; do
         	set -x
                 patch -p0 < $p
 		set +x
@@ -216,7 +216,7 @@ function dnb_scotch() {
         cd src
         [ ! -e Makefile.inc ] && ln -s Make.inc/Makefile.inc.i686_pc_linux2.shlib Makefile.inc
         sed -i 's/LDFLAGS.*/& -lrt/;s/-DSCOTCH_PTHREAD//;s/-DCOMMON_PTHREAD/-DSCOTCH_DETERMINISTIC/' Makefile.inc
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     local COMMANDS=""
     COMMANDS="cd src"
@@ -224,7 +224,7 @@ function dnb_scotch() {
     PARAMS="$PARAMS CCS=$CC CCP=$MPICC CCD=$MPICC AR=$CC"
     b_make "scotch" "${V}" "$COMMANDS" "clean $PARAMS" "$m"
     b_make "scotch" "${V}" "$COMMANDS" "ptscotch $PARAMS" "$m"
-    PARAMS="install installstub prefix=$INSTALL_DIR/${pkg}-${V}"
+    PARAMS="install installstub prefix=$DNB_INSTALL_DIR/${pkg}-${V}"
     i_make "scotch" "${V}" "$COMMANDS" "$PARAMS" "$m"
     i_make_binary_symlink "$pkg" "${V}" "$m"
     this_mode_is_set "i" "$m" && cp "${pkg}.bin/include_stub"/*.h "${pkg}.bin/include"
@@ -252,7 +252,7 @@ function dnb_CGNS() {
     du_github "$pkg" "$pkg" v "$V" "$m"
     local COMMANDS="cd src"
     local OPTS="--enable-shared=all --without-fortran --with-zlib"
-    [ -d "${INSTALL_DIR}/hdf5.bin" ] && OPTS="$OPTS --with-hdf5=${INSTALL_DIR}/hdf5.bin"
+    [ -d "${DNB_INSTALL_DIR}/hdf5.bin" ] && OPTS="$OPTS --with-hdf5=${DNB_INSTALL_DIR}/hdf5.bin"
     bi_autoconf_make "$pkg" "$V" "$COMMANDS" "$OPTS" "$m"
     i_make_binary_symlink "$pkg" "${V}" "$m"
     return 0
@@ -283,7 +283,7 @@ function dnb_silo() {
     fi
     local COMMANDS=""
     local OPTS="--enable-shared --disable-fortran --disable-hzip --disable-fpzip"
-    [ -d "${INSTALL_DIR}/hdf5.bin" ] && OPTS="$OPTS --with-hdf5=${INSTALL_DIR}/hdf5.bin/include,${INSTALL_DIR}/hdf5.bin/lib"
+    [ -d "${DNB_INSTALL_DIR}/hdf5.bin" ] && OPTS="$OPTS --with-hdf5=${DNB_INSTALL_DIR}/hdf5.bin/include,${DNB_INSTALL_DIR}/hdf5.bin/lib"
     bi_autoconf_make "$pkg" "$V" "$COMMANDS" "$OPTS" "$m"
     i_make_binary_symlink "$pkg" "${V}" "$m"
     return 0
@@ -300,7 +300,7 @@ function dnb_bazelisk() {
         cd ${pkg}-${V}
         [ -e "bazelisk" ] || ln -s bazelisk.exe bazelisk
         chmod +x bazelisk.exe
-        cd $INSTALL_DIR
+        cd $DNB_INSTALL_DIR
     fi
     return 0
 }
@@ -314,16 +314,16 @@ function dnb_tensorflow() {
     environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
     local m=$(get_field "$1" 2 "=")
     local V=$(get_field "$2" 2 "=")
-    local cache_dir=$INSTALL_DIR/_cache
+    local cache_dir=$DNB_INSTALL_DIR/_cache
     du_github "$pkg" "$pkg" "v" "$V" "$m"
     if this_mode_is_set "b" "$m"; then
         [ -e bazelisk.bin ] || fatal "bazelisk required to build tensorflow"
         cd ${pkg}-${V}.src
         local ram=$(free -m -w | awk '/available/ { for (i=1;i<=NF;i++) if ($i == "available") FLD=i+1; } /Mem:/ { print int($FLD / 8 * 7)  }')
-        $INSTALL_DIR/bazelisk.bin/bazelisk clean
-        rm -rf ~/.cache/bazel $INSTALL_DIR/_cache
-        BAZELISK_HOME=$cache_dir $INSTALL_DIR/bazelisk.bin/bazelisk --output_user_root=$cache_dir build tensorflow:tensorflow_cc tensorflow:install_headers --jobs=$DNB_MAKE_PARALLEL_LEVEL --local_ram_resources=$ram
-		cd $INSTALL_DIR
+        $DNB_INSTALL_DIR/bazelisk.bin/bazelisk clean
+        rm -rf ~/.cache/bazel $DNB_INSTALL_DIR/_cache
+        BAZELISK_HOME=$cache_dir $DNB_INSTALL_DIR/bazelisk.bin/bazelisk --output_user_root=$cache_dir build tensorflow:tensorflow_cc tensorflow:install_headers --jobs=$DNB_MAKE_PARALLEL_LEVEL --local_ram_resources=$ram
+		cd $DNB_INSTALL_DIR
     fi
     [ -e ${pkg}-${V} ] && rm -rf ${pkg}-${V}
     local FILES="bazel-bin/tensorflow/libtensorflow_cc.so.$V bazel-bin/tensorflow/libtensorflow_framework.so.$V bazel-bin/tensorflow/include"
@@ -335,7 +335,7 @@ function dnb_tensorflow() {
         ln -s libtensorflow_cc.so.2 libtensorflow_cc.so
         ln -s libtensorflow_framework.so.$V libtensorflow_framework.so.2
         ln -s libtensorflow_framework.so.2 libtensorflow_framework.so
-		cd $INSTALL_DIR
+		cd $DNB_INSTALL_DIR
 	fi
 }
 
@@ -346,9 +346,9 @@ function dnb_netcdf-fortran() {
     local V=$(get_field "$2" 2 "=")
     du_github "Unidata" "netcdf-fortran" "v" "$V" "$m"
     local OPTS=""
-    OPTS="$OPTS FCFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-I$INSTALL_DIR/netcdf-c.bin/include"
+    OPTS="$OPTS FCFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-I$DNB_INSTALL_DIR/netcdf-c.bin/include"
 #   for newest gfortran versions: OPTS="$OPTS FCFLAGS=-fallow-argument-mismatch""
-    local CMDS="export LDFLAGS=\"-L$INSTALL_DIR/netcdf-c.bin/lib -Wl,-rpath,$INSTALL_DIR/netcdf-c.bin/lib\""
+    local CMDS="export LDFLAGS=\"-L$DNB_INSTALL_DIR/netcdf-c.bin/lib -Wl,-rpath,$DNB_INSTALL_DIR/netcdf-c.bin/lib\""
     bi_autoconf_make "$pkg" "$V" "$CMDS" "$OPTS" "$m"
     i_make_binary_symlink "$pkg" "${V}" "$m"
 }
@@ -360,8 +360,8 @@ function dnb_netcdf-c() {
     local V=$(get_field "$2" 2 "=")
     du_github "Unidata" "netcdf-c" "v" "$V" "$m"
     local OPTS=""
-    OPTS="$OPTS CPPFLAGS=-I$INSTALL_DIR/hdf5.bin/include"
-    OPTS="$OPTS LDFLAGS=-L$INSTALL_DIR/hdf5.bin/lib"
+    OPTS="$OPTS CPPFLAGS=-I$DNB_INSTALL_DIR/hdf5.bin/include"
+    OPTS="$OPTS LDFLAGS=-L$DNB_INSTALL_DIR/hdf5.bin/lib"
     OPTS="$OPTS --enable-parallel4"
     bi_autoconf_make "$pkg" "$V" "" "$OPTS" "$m"
     i_make_binary_symlink "$pkg" "${V}" "$m"

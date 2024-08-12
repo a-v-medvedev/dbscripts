@@ -64,8 +64,8 @@ function dnb_foobar() {
     local V=$(get_field "$2" 2 "=")
 	du_github "somename" "pkg" "v" "$V" "$m"
     local OPTS=""
-    OPTS="$OPTS CPPFLAGS=-I$INSTALL_DIR/something.bin/include"
-    OPTS="$OPTS LDFLAGS=-L$INSTALL_DIR/something.bin/lib"
+    OPTS="$OPTS CPPFLAGS=-I$DNB_INSTALL_DIR/something.bin/include"
+    OPTS="$OPTS LDFLAGS=-L$DNB_INSTALL_DIR/something.bin/lib"
     OPTS="$OPTS --enable-some-feature"
     bi_autoconf_make "$pkg" "$V" "" "$OPTS" "$m"
     i_make_binary_symlink "$pkg" "${V}" "$m"
