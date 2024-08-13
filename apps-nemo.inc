@@ -31,21 +31,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-function beginswith() {
-    case $1 in
-        $2*) return 0;;
-        *) return 1;;
-    esac
-}
-
-function is_set_to_true() {
-    local varname=$1
-    set +u
-    [ -z "${!varname}" -o "${!varname}" == 0 -o "${!varname}" == false -o "${!varname}" == FALSE ] && return 1 
-    set -u  
-    return 0
-}
-
 function mkdatalink() {
     local dir="$1"
     local file="$2"
@@ -72,14 +57,15 @@ function set_path_variable_if_missing() {
 
 
 function dnb_xios() {
-    local pkg="xios"
-    local m=$(get_field "$1" 2 "=")
-    local V=$(get_field "$2" 2 "=")
-    environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
+	#local pkg="xios"
+	#local m=$(get_field "$1" 2 "=")
+	#local V=$(get_field "$2" 2 "=")
+	#environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
+    generic_prolog "xios" || return 0	
 
-    du_svn "$pkg" "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}" "$V" "$m"
+    du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}"
 
-    if this_mode_is_set 'b' "$m"; then
+    if this_mode_is_set 'b'; then
         set +u
         set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
         set_path_variable_if_missing NEMO NETCDF_C "$DNB_INSTALL_DIR/netcdf-c.bin"
@@ -140,7 +126,7 @@ EOF
         ./make_xios --netcdf_lib netcdf4_par --prod --arch dnb --job $XIOS_MAKE_PARALLEL_LEVEL || fatal "make_xios failed."
         cd $DNB_INSTALL_DIR
     fi
-    if this_mode_is_set 'i' "$m"; then
+    if this_mode_is_set 'i'; then
         [ -d "$pkg-$V" ] && rm -rf "$pkg-$V"
         [ -e "$pkg-$V" ] && rm -f "$pkg-$V"
         mkdir -p "$pkg-$V"
@@ -150,22 +136,25 @@ EOF
         cp ${pkg}-${V}.src/lib/* ${pkg}-${V}/lib
         cp ${pkg}-${V}.src/inc/* ${pkg}-${V}/inc
     fi
-
-    i_make_binary_symlink "$pkg" "${V}" "$m"
+    generic_epilog
+    #i_make_binary_symlink "$pkg" "${V}" "$m"
 }
 
 function dnb_nemo() {
-    local pkg="nemo"
-    local m=$(get_field "$1" 2 "=")
-    local V=$(get_field "$2" 2 "=")
-    environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
+	#local pkg="nemo"
+	#local m=$(get_field "$1" 2 "=")
+	#local V=$(get_field "$2" 2 "=")
+	#environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
+
+    generic_prolog "nemo" || return 0    
+
     [ -z "$NEMO_WORKLOAD_ARCHIVE" ] && fatal "NEMO_WORKLOAD_ARCHIVE is required, must be set in env.sh"
     [ -z "$NEMO_WORKLOAD_MD5" ] && fatal "NEMO_WORKLOAD_MD5 is required, must be set in env.sh"
 
     mkdatalink "$DNB_INSTALL_DIR" "$NEMO_WORKLOAD_ARCHIVE"
 
     if beginswith "$V" "4.0"; then
-        du_svn "$pkg" "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V" "$V" "$m"
+        du_svn "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V"
     else
     # if beginswith "$V" "4.2"; then
     # TODO: add something working for 4.2 from github
@@ -174,7 +163,7 @@ function dnb_nemo() {
         fatal "getting source code: not supported version of NEMO"
     fi
 
-    if this_mode_is_set 'd' "$m" || this_mode_is_set 'u' "$m"; then
+    if any_mode_is_set 'du'; then
         # workload: for NEMO 4.0 community verson:
         # download from https://zenodo.org/record/2640723#.ZGOnotJByV4  
         # for NEMO 4.2: TBD
@@ -200,7 +189,7 @@ function dnb_nemo() {
         fi
         cd $DNB_INSTALL_DIR
     fi
-    if this_mode_is_set 'b' "$m"; then
+    if this_mode_is_set 'b'; then
         set +u
         [ -z "$NEMO_CFG" ] && fatal "NEMO_CFG is not set"
         [ -z "$NEMO_SUBCOMPONENTS" ] && fatal "NEMO_SUBCOMPONENTS is not set"
@@ -250,9 +239,9 @@ EOF
         ./makenemo -j $NEMO_MAKE_PARALLEL_LEVEL -r ORCA2_ICE_PISCES -n "$NEMO_CFG" -d "$NEMO_SUBCOMPONENTS" -m dnb add_key "$NEMO_KEYS_TO_ADD" del_key "$NEMO_KEYS_TO_DELETE" || fatal "makenemo failed."
         set +x
         cd $DNB_INSTALL_DIR
-                [ -x $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/nemo ] || fatal "makenemo failed."
+	[ -x $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/nemo ] || fatal "makenemo failed."
     fi
-    if this_mode_is_set 'i' "$m"; then
+    if this_mode_is_set 'i'; then
         [ -d "$pkg-$V" ] && rm -rf "$pkg-$V"
         [ -e "$pkg-$V" ] && rm -f "$pkg-$V"
         mkdir -p "$pkg-$V"
@@ -265,8 +254,7 @@ EOF
         tar --skip-old-files -xvf "../${pkg}.dwn/$NEMO_WORKLOAD_ARCHIVE"
         cd $DNB_INSTALL_DIR
     fi
-    i_make_binary_symlink "$pkg" "${V}" "$m"
+    generic_epilog
+    #i_make_binary_symlink "$pkg" "${V}" "$m"
 }
-
-
 

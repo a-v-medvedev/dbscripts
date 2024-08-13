@@ -183,14 +183,15 @@ function remove_temps() {
 [ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
 [ -z "$DNB_YAML_CONFIG" ] && DNB_YAML_CONFIG=dnb.yaml
 
-source $DNB_DBSCRIPTSDIR/base.inc
-source $DNB_DBSCRIPTSDIR/funcs.inc
-source $DNB_DBSCRIPTSDIR/compchk.inc
-source $DNB_DBSCRIPTSDIR/envchk.inc
-source $DNB_DBSCRIPTSDIR/db.inc
-source $DNB_DBSCRIPTSDIR/apps.inc
+#source $DNB_DBSCRIPTSDIR/base.inc
+#source $DNB_DBSCRIPTSDIR/funcs.inc
+#source $DNB_DBSCRIPTSDIR/cache.inc
+#source $DNB_DBSCRIPTSDIR/compchk.inc
+#source $DNB_DBSCRIPTSDIR/envchk.inc
+#source $DNB_DBSCRIPTSDIR/db.inc
+#source $DNB_DBSCRIPTSDIR/apps.inc
 
-which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DNB_DBSCRIPTSDIR/module.inc
+#which module >& /dev/null || [ `type -t module`"" == 'function' ] || source $DNB_DBSCRIPTSDIR/module.inc
 
 trap remove_temps EXIT
 
