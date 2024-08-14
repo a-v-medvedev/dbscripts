@@ -49,7 +49,7 @@ Here we define two special functions to download source code archive or clone th
 
 The `dnb_bar` shows an example of the most generalized form for such a function. The `dnb_foo` illustrates the way some ready-made subroutines can be utilized. The `dnb_sandbox` is optional and is executed after all actions are complete, and only in case the installation action was selected in the build mode definitions. Please note, that in the context of this example and in other contexts we use acronyms `d`, `u`, `b` and `i` to address 4 main action modes of the utility: `download`, `build`, `unpack` and `install`. 
 
-The `dnb.yaml` for this fictional case may look like:
+The `dnb.yaml` for this fictional use case may look like:
 
 ```
 ---
@@ -57,8 +57,7 @@ packages:
   - [ foo ]
   - [ bar ]
 versions:
-  - condition: true
-    list:
+  - list:
       - foo:0.7.0
       - bar:HEAD^0.8rc
 target_dirs:
@@ -114,8 +113,6 @@ per-package:
 
 The `adhoc.yaml` in this setup is optional and may contain some special settings and overrides for a specific build session.
 
-Here we define a special function to download source code, unpack the downloaded archive (or prepare the cloned source code tree for build actions), build the source code and copy build results to a place where it is going to be used. The directory names are supposed to be: `${pkg}-${V}.dwn`, `${pkg}-${V}.src`, `${pkg}-${V}`.
-
 ## Typical structure of a function to build some package
 
 Besides the `du_github` and `bi_make` subroutines, there are many others that help to do some common actions. For example, if the source code is on github and is is built using standard autoconf/make process, the `dnb_foobar` function may look like:
@@ -133,7 +130,7 @@ function dnb_foobar() {
 }
 ```
 
-In this example, we use predefined functions `du_gitlab` and `bi_autoconf_make`. The first letters in name of functions of this kind denote which of `d`, `u`, `b`, `i` build modes it handles. Build modes are just acronyms from `download`, `build`, `unpack`, `install`. So, for example `du_github` function does some actions for `download` and `unpack` build modes.
+In this example, we use predefined functions `du_gitlab` and `bi_autoconf_make`. The first letters in name of functions of this kind denote which of `d`, `u`, `b`, `i` action modes it handles. As it was mentioned above, the action modes here are just acronyms from `download`, `build`, `unpack`, `install`. So, for example `du_github` function does some actions for `download` and `unpack` build modes.
 
 ## List of predefined helper functions
 
