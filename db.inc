@@ -42,6 +42,8 @@ function dubi_main {
     local what_to_build=$(expand_mode_string "$*" "$DNB_PACKAGES" "$dependencies" "$default_build_mode")
     local was_installed=""
 
+    echo ">> dbscripts: dubi_main:$what_to_build"
+
     local LIST1=$(print_all_exec_files "$DNB_TARGET_DIRS")
  #--- MAIN CYCLE
     for pkgver in $what_to_build; do
@@ -49,12 +51,13 @@ function dubi_main {
         local mode=$(mode_for_pkg ${pkg} "$what_to_build")
         local version=$(version_for_pkg ${pkg} "${DNB_VERSIONS}" "${override_versions}" "${what_to_build}")
         if [ ! -z "$mode" ]; then
+            echo ">> dbscripts: dubi_main: dnb_${pkg} mode=$mode version=$version"
             eval dnb_${pkg} mode=$mode version=$version
         fi
         this_mode_is_set "i" "$mode" && was_installed=1
     done
     if [ ! -z "$was_installed" ]; then
-        check_bash_func_declared dnb_sandbox && dnb_sandbox
+        check_bash_func_declared dnb_sandbox && echo ">> dbscripts: dubi_main: dnb_sandbox" && dnb_sandbox
     fi
  #-------------
     LIST2=$(print_all_exec_files "$DNB_TARGET_DIRS" "$started")

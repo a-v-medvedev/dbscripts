@@ -178,7 +178,7 @@ function template_to_psubmitopts {
 
 function get_default_build_mode() {
     set +u
-    local default_build_mode="${DEFAULT_BUILD_MODE}"
+    local default_build_mode="${DNB_DEFAULT_BUILD_MODE}"
     set -u
     [ -z "$default_build_mode" ] && default_build_mode=":dubi"
     echo "$default_build_mode"
