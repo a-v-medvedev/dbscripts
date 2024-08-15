@@ -42,7 +42,7 @@ function dubi_main {
     local what_to_build=$(expand_mode_string "$*" "$DNB_PACKAGES" "$dependencies" "$default_build_mode")
     local was_installed=""
 
-    echo ">> dbscripts: dubi_main:$what_to_build"
+    echo ">> dbscripts: dubi_main: actions:$what_to_build"
 
     local LIST1=$(print_all_exec_files "$DNB_TARGET_DIRS")
  #--- MAIN CYCLE
@@ -51,13 +51,13 @@ function dubi_main {
         local mode=$(mode_for_pkg ${pkg} "$what_to_build")
         local version=$(version_for_pkg ${pkg} "${DNB_VERSIONS}" "${override_versions}" "${what_to_build}")
         if [ ! -z "$mode" ]; then
-            echo ">> dbscripts: dubi_main: dnb_${pkg} mode=$mode version=$version"
+            echo ">> dbscripts: dubi_main: call: dnb_${pkg} mode=$mode version=$version"
             eval dnb_${pkg} mode=$mode version=$version
         fi
         this_mode_is_set "i" "$mode" && was_installed=1
     done
     if [ ! -z "$was_installed" ]; then
-        check_bash_func_declared dnb_sandbox && echo ">> dbscripts: dubi_main: dnb_sandbox" && dnb_sandbox
+        check_bash_func_declared dnb_sandbox && echo ">> dbscripts: dubi_main: call: dnb_sandbox" && dnb_sandbox
     fi
  #-------------
     LIST2=$(print_all_exec_files "$DNB_TARGET_DIRS" "$started")
@@ -69,12 +69,34 @@ function dubi_main {
     return 0
 }
 
+function u_apply_patches() {
+    if this_mode_is_set "u"; then
+        N=$(ls -1 $DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
+        if [ "$N" -gt "0" ]; then
+            cd ${pkg}-${V}.src
+            for p in ../$DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff; do
+               set -x
+                patch -p0 < $p
+               set +x
+            done
+            cd ..
+        fi
+    fi
+    return 0
+}
+
+
+function u_make_source_symlink() {
+    if this_mode_is_set 'u'; then	
+        cd $DNB_INSTALL_DIR	
+	rm -f ${pkg}.src
+	ln -s ${pkg}-${V}.src ${pkg}.src
+    fi
+}
+
 function du_direct_download() {
-    #local pkg="$==1"
     local url="$1"
     local file="$2"
-    #local VER="$==4"
-    #local m="$==5"
     [ -z "$m" ] && return
     local target=${pkg}.dwn/$file
     if this_mode_is_set "d"; then
@@ -100,26 +122,23 @@ function du_direct_download() {
             mv $target ${pkg}-${V}.src
         fi
     fi
+    u_make_source_symlink
     return 0
 }
 
 function github_get_latest_version_tag() {
     local user="$1"
-    local pkg="$2"
-    T=$(mktemp)
+    local T=$(mktemp)
     wget -q -O $T "https://api.github.com/repos/$user/$pkg/releases/latest"
-    V=$(cat $T | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    local version=$(cat $T | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
     rm $T
-    echo $V
+    echo $version
     return 0
 }
 
 function du_github {
     local addr="$1"
-    #local pkg="$==2"
     local pfx="$2"
-    #local VER="$==4"
-    #local m="$==5"
     [ -z "$m" ] && return
     local archive=${pkg}.dwn/${pkg}-${V}.tar.gz
     if this_mode_is_set 'd'; then
@@ -146,15 +165,13 @@ function du_github {
         [ -e ${pkg}-${V}.src ] && rm -rf ${pkg}-${V}.src
         mv ${DIR} ${pkg}-${V}.src
     fi
+    u_make_source_symlink
     return 0
 }
 
 function du_gitlab {
     local addr="$1"
-    #local pkg="$==2"
     local pfx="$2"
-    #local VER="$==4"
-    #local m="$==5"
     set +u
     local host="$3"
     local token="$4"
@@ -197,25 +214,15 @@ function du_gitlab {
         [ -e ${pkg}-${V}.src ] && rm -rf ${pkg}-${V}.src
         mv ${DIR} ${pkg}-${V}.src
     fi
+    u_make_source_symlink
     return 0
 }
 
-function gitclone {
-	#local proj="$==1"
+function du_gitclone() {
     local addr="$1"
-    #local VER="$==3"
-    #local branchname="$==4"
-    [ -d "$pkg"-${V}.src ] && rm -rf "$pkg"-${V}.src
-    [ ! -z "$branchname" ] && branchopt="-b $branchname"
-    git clone "$addr" $branchopt "$pkg"-${V}.src
-    return 0
-}
-
-function du_gitclone_recursive() {
-	#local pkg="$==1"
-    local addr="$1"
-    #local V="$==3"
-    #local m="$==4"
+    set +u
+    local flags="$2"
+    set -u
     if this_mode_is_set 'd'; then
        [ -e "$pkg"-"$V".src ] && rm -rf "$pkg"-"$V".src
        mkdir -p "$pkg"-"$V".src
@@ -226,20 +233,20 @@ function du_gitclone_recursive() {
            branch="master"
            [ $(get_nfields "${V}" "^") == "2" ] && branch=$(get_field "${V}" "2" "^")
        fi
-       git clone --depth 1 --single-branch --branch "$branch" --recursive "${addr}" .
+       local recursive=""
+       [ "$flags" == "recursive" ] && recursive="--recursive"
+       git clone --depth 1 --single-branch --branch "$branch" $recursive "${addr}" .
        cd ..
     fi
     if this_mode_is_set 'u'; then
         [ -e "$pkg"-"$V".src ] || fatal "${pkg}-${V}.src directory not found, must be downloaded first."
     fi
+    u_make_source_symlink
     return 0
 }
 
 function du_svn() { 
-	#local pkg="$==1"
     local url="$1"
-    #local VER="$==3" 
-    #local m="$==4"
     mkdir -p "${pkg}.dwn"
     if this_mode_is_set 'd'; then
         cd "${pkg}.dwn" 
@@ -264,15 +271,13 @@ function du_svn() {
         [ -e "${pkg}-${V}.src" ] && rm -rf "${pkg}-${V}.src"
         mv "${DIR}" "${pkg}-${V}.src"
     fi
+    u_make_source_symlink
     return 0
 }
 
 function bi_cmake() {
-	#local proj="$==1"
-	#local VER="$==2"
     local cmpath="$1"
     local opts="$2"
-    #local m="$==5"
     [ -z "$m" ] && return
     if this_mode_is_set 'b'; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
@@ -297,18 +302,15 @@ function bi_cmake() {
 }
 
 function bi_autoconf_make() {
-	#local pkg="$==1"
-	#local VER="$==2"
     local commands="$1"
     local opts="$2"
-    #local m="$==5"
     if this_mode_is_set 'b'; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
         [ ! -z "$commands" ] && eval "$commands"
- set -x
+        set -x
         ./configure $opts --prefix=$DNB_INSTALL_DIR/${pkg}-${V}
- set +x
+        set +x
         make clean
         make -j $DNB_MAKE_PARALLEL_LEVEL
         cd $DNB_INSTALL_DIR
@@ -324,14 +326,11 @@ function bi_autoconf_make() {
 }
 
 function bi_make() {
-	#    local proj="$==1"
-	#local VER="$==2"
     local commands="$1"
     local params="$2"
     set +u
     local files="$3"
     set -u
-    #local m="$==5"
     if any_mode_is_set "bi"; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
@@ -362,23 +361,16 @@ function i_make() {
 }
 
 function i_make_binary_symlink() {
-	#local proj="$1"
-	#local VER="$2"
-	#local m="$3"
     if this_mode_is_set 'i'; then
-        rm -f $DNB_INSTALL_DIR/${pkg}.bin
-        ln -s $DNB_INSTALL_DIR/${pkg}-${V} $DNB_INSTALL_DIR/${pkg}.bin
-        rm -f $DNB_INSTALL_DIR/${pkg}.src
-        ln -s $DNB_INSTALL_DIR/${pkg}-${V}.src $DNB_INSTALL_DIR/${pkg}.src
+        cd $DNB_INSTALL_DIR
+        rm -f ${pkg}.bin
+        ln -s ${pkg}-${V} ${pkg}.bin
     fi
     return 0
 }
 
 function i_direct_copy() { 
-	#local proj="$==1"
-	#local VER="$==2"
     local files="$1"
-    #local m="$==4"
     set +u
     local flags="$2"
     set -u
@@ -389,22 +381,6 @@ function i_direct_copy() {
         mkdir -p $DNB_INSTALL_DIR/${pkg}-${V}
         cp -r $files $DNB_INSTALL_DIR/${pkg}-${V}
         cd $DNB_INSTALL_DIR
-    fi
-    return 0
-}
-
-function u_apply_patches() {
-    if this_mode_is_set "u"; then
-        N=$(ls -1 $DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
-        if [ "$N" -gt "0" ]; then
-            cd ${pkg}-${V}.src
-            for p in ../$DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff; do
-               set -x
-                patch -p0 < $p
-               set +x
-            done
-            cd ..
-        fi
     fi
     return 0
 }
