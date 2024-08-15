@@ -250,7 +250,7 @@ function du_svn() {
     mkdir -p "${pkg}.dwn"
     if this_mode_is_set 'd'; then
         cd "${pkg}.dwn" 
-        svn --force export "$url" "$pkg"
+        svn --force -q export "$url" "$pkg"
         cd "$pkg" 
         if [ -d "$pkg" ]; then
             tar czf "../${pkg}-${V}.tar.gz" "$pkg"

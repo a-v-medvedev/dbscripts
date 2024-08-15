@@ -35,10 +35,12 @@ function mkdatalink() {
     local dir="$1"
     local file="$2"
     local oldpwd=$PWD
+    [ -e "$HOME/data/$file" ] || return 0
     cd "$dir"
     [ -L "$file" ] && rm -rf "$file"
     [ -e "$file" ] || ln -s "$HOME/data/$file" .
     cd "$oldpwd"
+    return 0
 }
 
 function set_path_variable_if_missing() {
@@ -57,7 +59,7 @@ function set_path_variable_if_missing() {
 
 
 function dnb_xios() {
-    generic_prolog "xios" || return 0	
+    generic_prolog "xios" $* || return 0	
     du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}"
     if this_mode_is_set 'b'; then
         set +u
@@ -129,7 +131,7 @@ EOF
 }
 
 function dnb_nemo() {
-    generic_prolog "nemo" || return 0    
+    generic_prolog "nemo" $* || return 0    
     fail_if_variable_not_defined NEMO_WORKLOAD_ARCHIVE NEMO_WORKLOAD_MD5 NEMO_CODEBASE
 
     # Source code downloads
