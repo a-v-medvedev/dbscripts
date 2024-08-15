@@ -57,27 +57,16 @@ function set_path_variable_if_missing() {
 
 
 function dnb_xios() {
-	#local pkg="xios"
-	#local m=$(get_field "$1" 2 "=")
-	#local V=$(get_field "$2" 2 "=")
-	#environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
     generic_prolog "xios" || return 0	
-
     du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}"
-
     if this_mode_is_set 'b'; then
         set +u
         set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
         set_path_variable_if_missing NEMO NETCDF_C "$DNB_INSTALL_DIR/netcdf-c.bin"
         set_path_variable_if_missing NEMO NETCDF_FORTRAN "$DNB_INSTALL_DIR/netcdf-fortran.bin"
-
-        [ -z "$XIOS_CCOMPILER" ] && XIOS_CCOMPILER="mpicc"
-        [ -z "$XIOS_FCOMPILER" ] && XIOS_FCOMPILER="mpif90"
-        [ -z "$XIOS_LINKER" ] && XIOS_LINKER="mpif90 -nofor-main"
-        [ -z "$XIOS_CFLAGS" ] && XIOS_CFLAGS="-std=c++03 -O3 -D BOOST_DISABLE_ASSERTS"
-        [ -z "$XIOS_CPP" ] && XIOS_CPP="mpicc -EP"
-        [ -z "$XIOS_FPP" ] && XIOS_FPP="cpp -P"
+	fail_if_variable_not_defined XIOS_CCOMPILER XIOS_FCOMPILER XIOS_LINKER XIOS_CFLAGS XIOS_CPP XIOS_FPP
         set -u
+
         cd ${pkg}-${V}.src
         cat > arch/arch-dnb.env <<EOF
 #env
@@ -137,41 +126,41 @@ EOF
         cp ${pkg}-${V}.src/inc/* ${pkg}-${V}/inc
     fi
     generic_epilog
-    #i_make_binary_symlink "$pkg" "${V}" "$m"
 }
 
 function dnb_nemo() {
-	#local pkg="nemo"
-	#local m=$(get_field "$1" 2 "=")
-	#local V=$(get_field "$2" 2 "=")
-	#environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
-
     generic_prolog "nemo" || return 0    
+    fail_if_variable_not_defined NEMO_WORKLOAD_ARCHIVE NEMO_WORKLOAD_MD5 NEMO_CODEBASE
 
-    [ -z "$NEMO_WORKLOAD_ARCHIVE" ] && fatal "NEMO_WORKLOAD_ARCHIVE is required, must be set in env.sh"
-    [ -z "$NEMO_WORKLOAD_MD5" ] && fatal "NEMO_WORKLOAD_MD5 is required, must be set in env.sh"
-
-    mkdatalink "$DNB_INSTALL_DIR" "$NEMO_WORKLOAD_ARCHIVE"
-
-    if beginswith "$V" "4.0"; then
-        du_svn "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V"
-    else
-    # if beginswith "$V" "4.2"; then
-    # TODO: add something working for 4.2 from github
-    # go with github:
-    # du_github ...
-        fatal "getting source code: not supported version of NEMO"
+    # Source code downloads
+    if beginswith "$NEMO_CODEBASE" "COMMUNITY"; then
+        if beginswith "$V" "4.0"; then
+            du_svn "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V"
+        elif beginswith "$V" "4.2"; then
+            true
+            fatal "getting source code: not supported version of NEMO"
+            # TODO: add something working for 4.2 from github
+            # go with github:
+            # du_github ...
+        elif beginswith "$V" "5.0"; then
+            true
+            fatal "getting source code: not supported version of NEMO"
+            # TODO: add something working for 5.0 from github
+            # go with github:
+            # du_github ...
+        fi
     fi
 
-    if any_mode_is_set 'du'; then
-        # workload: for NEMO 4.0 community verson:
-        # download from https://zenodo.org/record/2640723#.ZGOnotJByV4  
-        # for NEMO 4.2: TBD
+    # Debug workload downloads
+    mkdatalink "$DNB_INSTALL_DIR" "$NEMO_WORKLOAD_ARCHIVE"
+    if this_mode_is_set 'd'; then
+        # Debug workload download procedure.
         # Avoid downloading if there are pre-downloaded files:
         cd "${pkg}.dwn"
         if [ -f "$NEMO_WORKLOAD_ARCHIVE" ]; then
             echo "$NEMO_WORKLOAD_MD5 $NEMO_WORKLOAD_ARCHIVE" | md5sum -c --status || rm -f "$NEMO_WORKLOAD_ARCHIVE"
         fi
+	# No pre-downloaded archive, have to download it:
         if [ ! -f "$NEMO_WORKLOAD_ARCHIVE" ]; then
             if [ -f "../$NEMO_WORKLOAD_ARCHIVE" ]; then
                 rm -f "$NEMO_WORKLOAD_ARCHIVE"
@@ -179,35 +168,37 @@ function dnb_nemo() {
             else
                 # We really have to download:
                 if beginswith "$V" "4.0"; then
+	   	    # workload: for NEMO 4.0 community verson:
+                    # download from https://zenodo.org/record/2640723#.ZGOnotJByV4  
                     wget -nv -O "$NEMO_WORKLOAD_ARCHIVE" "https://zenodo.org/record/2640723/files/$NEMO_WORKLOAD_ARCHIVE?download=1"
-                # elif beginswith "$V" "4.2"; then
-                # TODO add workload download code for 4.2
+                elif beginswith "$V" "4.2"; then
+		    true
+		    fatal "unsupported NEMO version for debug workload downloads."
+                    # TODO add workload download code for 4.2
+    		elif beginswith "$V" "5.0"; then
+		    true
+		    fatal "unsupported NEMO version for debug workload downloads."
+                    # TODO add workload download code for 5.0
                 else
-                    fatal "For this NEMO version, we don't know how to get the workload." 
+                    fatal "For this NEMO version, we don't know how to get the debug workload." 
                 fi
             fi
         fi
         cd $DNB_INSTALL_DIR
     fi
+
+    # Build
     if this_mode_is_set 'b'; then
         set +u
-        [ -z "$NEMO_CFG" ] && fatal "NEMO_CFG is not set"
-        [ -z "$NEMO_SUBCOMPONENTS" ] && fatal "NEMO_SUBCOMPONENTS is not set"
-        [ -z "$NEMO_KEYS_TO_DELETE" ] && fatal "NEMO_KEYS_TO_DELETE is not set"
-        [ -z "$NEMO_KEYS_TO_ADD" ] && fatal "NEMO_KEYS_TO_ADD is not set"
-
+	fail_if_variable_not_defined NEMO_CFG NEMO_SUBCOMPONENTS NEMO_KEYS_TO_DELETE NEMO_KEYS_TO_ADD
         set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
         set_path_variable_if_missing NEMO NETCDF_C "$DNB_INSTALL_DIR/netcdf-c.bin"
         set_path_variable_if_missing NEMO NETCDF_FORTRAN "$DNB_INSTALL_DIR/netcdf-fortran.bin"
         set_path_variable_if_missing NEMO XIOS "$DNB_INSTALL_DIR/xios.bin"
-
-        [ -z "$NEMO_CPP" ] && fatal "NEMO_CPP is not set"
-        [ -z "$NEMO_CC" ] && fatal "NEMO_CC is not set"
-        [ -z "$NEMO_FC" ] && fatal "NEMO_FC is not set"
-        [ -z "$NEMO_FCFLAGS" ] && fatal "NEMO_FCFLAGS is not set"
-        [ -z "$NEMO_LDFLAGS" ] && fatal "NEMO_LDFLAGS is not set"
-        [ -z "$NEMO_FPPFLAGS" ] && fatal "NEMO_FPPFLAGS is not set"
+	fail_if_variable_not_defined NEMO_CPP NEMO_CC NEMO_FC NEMO_FCFLAGS NEMO_LDFLAGS NEMO_FPPFLAGS
         set -u
+
+	# Patch to enable detailed timing output
         cd ${pkg}-${V}.src
         if [ -e "./src/OCE/IOM/in_out_manager.F90" ]; then
             sed -i 's/ln_timing_detail = \.FALSE\./ln_timing_detail = .TRUE./' "./src/OCE/IOM/in_out_manager.F90"
@@ -245,16 +236,11 @@ EOF
         [ -d "$pkg-$V" ] && rm -rf "$pkg-$V"
         [ -e "$pkg-$V" ] && rm -f "$pkg-$V"
         mkdir -p "$pkg-$V"
-        if beginswith "$V" "DE340"; then
-            cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/nemo "$pkg-$V"
-        else
-            cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/* "$pkg-$V"
-        fi
+        cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/* "$pkg-$V"
         cd "$pkg-$V"
         tar --skip-old-files -xvf "../${pkg}.dwn/$NEMO_WORKLOAD_ARCHIVE"
         cd $DNB_INSTALL_DIR
     fi
     generic_epilog
-    #i_make_binary_symlink "$pkg" "${V}" "$m"
 }
 
