@@ -101,15 +101,15 @@ function parse_cfg_yaml() {
   update_setting $yaml psubmit ngpus PSUBMIT_OPT_NGPUS
   update_setting $yaml psubmit queue_name PSUBMIT_OPT_QUEUE
 
-  update_setting $yaml psubmit queue_suffix PSUBMIT_OPTS_QUEUE_SUFFIX
-  update_setting $yaml psubmit constraint PSUBMIT_OPTS_CONSTRAINT
-  update_setting $yaml psubmit whitelist PSUBMIT_OPTS_WHITELIST
-  update_setting $yaml psubmit blacklist PSUBMIT_OPTS_BLACKLIST
-  update_setting $yaml psubmit comment PSUBMIT_OPTS_COMMENT
-  update_setting $yaml psubmit before PSUBMIT_OPTS_BEFORE
-  update_setting $yaml psubmit after PSUBMIT_OPTS_AFTER
-  update_setting $yaml psubmit target_bin PSUBMIT_TARGET_BIN
-  update_setting $yaml psubmit job_name PSUBMIT_JOB_NAME
+  update_setting $yaml psubmit queue_suffix PSUBMIT_OPT_QUEUE_SUFFIX
+  update_setting $yaml psubmit constraint PSUBMIT_OPT_CONSTRAINT
+  update_setting $yaml psubmit whitelist PSUBMIT_OPT_WHITELIST
+  update_setting $yaml psubmit blacklist PSUBMIT_OPT_BLACKLIST
+  update_setting $yaml psubmit comment PSUBMIT_OPT_COMMENT
+  update_setting $yaml psubmit before PSUBMIT_OPT_BEFORE
+  update_setting $yaml psubmit after PSUBMIT_OPT_AFTER
+  update_setting $yaml psubmit target_bin PSUBMIT_OPT_TARGET_BIN
+  update_setting $yaml psubmit job_name PSUBMIT_OPT_JOB_NAME
 
   update_setting $yaml psubmit account PSUBMIT_OPT_ACCOUNT
   update_setting $yaml psubmit time_limit PSUBMIT_OPT_TIME_LIMIT
@@ -119,8 +119,8 @@ function parse_cfg_yaml() {
 
   update_setting $yaml psubmit init_commands PSUBMIT_OPT_INIT_COMMANDS
   update_setting $yaml psubmit injob_init_commands PSUBMIT_OPT_INJOB_INIT_COMMANDS
-  update_setting $yaml psubmit mpi_script PSUBMIT_OPT_MPI_SCRIPT
-  update_setting $yaml psubmit batch_script PSUBMIT_OPT_BATCH_SCRIPT
+  update_setting $yaml psubmit mpi_script PSUBMIT_OPT_MPIEXEC
+  update_setting $yaml psubmit batch_script PSUBMIT_OPT_BATCH
 
   if [ "$(cat $yaml | yq '.per-package')" != "null" ]; then
     local pkgs=$(cat $yaml | yq '.per-package | keys | .[]')

@@ -133,8 +133,8 @@ function construct_replacement_command() {
 function generate_psubmit_opt() {
     local dir=$1
     set +u
-    echo > $dir/psubmit.opt
-    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPI_SCRIPT BATCH_SCRIPT WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
+    echo -n > $dir/psubmit.opt
+    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
         local varname=PSUBMIT_OPT_$i
         [ -z "${!varname}" ] || echo "$i=\"${!varname}\"" >> $dir/psubmit.opt
     done
@@ -157,8 +157,8 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__NGPUS__" "$PSUBMIT_OPTS_NGPUS"))
     repl=$(echo "${repl}" $(construct_replacement_command "__INIT_COMMANDS__" "$PSUBMIT_OPTS_INIT_COMMANDS"))
     repl=$(echo "${repl}" $(construct_replacement_command "__INJOB_INIT_COMMANDS__" "$PSUBMIT_OPTS_INJOB_INIT_COMMANDS"))
-    repl=$(echo "${repl}" $(construct_replacement_command "__MPI_SCRIPT__" "$PSUBMIT_OPTS_MPI_SCRIPT"))
-    repl=$(echo "${repl}" $(construct_replacement_command "__BATCH_SCRIPT__" "$PSUBMIT_OPTS_BATCH_SCRIPT"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__MPI_SCRIPT__" "$PSUBMIT_OPTS_MPIEXEC"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__BATCH_SCRIPT__" "$PSUBMIT_OPTS_BATCH"))
     repl=$(echo "${repl}" $(construct_replacement_command "__WHITELIST__" "$PSUBMIT_OPTS_WHITELIST"))
     repl=$(echo "${repl}" $(construct_replacement_command "__BLACKLIST__" "$PSUBMIT_OPTS_BLACKLIST"))
     repl=$(echo "${repl}" $(construct_replacement_command "__ACCOUNT__" "$PSUBMIT_OPTS_ACCOUNT"))
