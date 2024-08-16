@@ -99,7 +99,7 @@ function parse_cfg_yaml() {
   update_setting $yaml psubmit ppn PSUBMIT_OPT_PPN
   update_setting $yaml psubmit nth PSUBMIT_OPT_NTH
   update_setting $yaml psubmit ngpus PSUBMIT_OPT_NGPUS
-  update_setting $yaml psubmit queue_name PSUBMIT_OPT_QUEUE_NAME
+  update_setting $yaml psubmit queue_name PSUBMIT_OPT_QUEUE
 
   update_setting $yaml psubmit queue_suffix PSUBMIT_OPTS_QUEUE_SUFFIX
   update_setting $yaml psubmit constraint PSUBMIT_OPTS_CONSTRAINT

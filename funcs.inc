@@ -134,7 +134,7 @@ function generate_psubmit_opt() {
     local dir=$1
     set +u
     echo > $dir/psubmit.opt
-    for i in QUEUE_NAME QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPI_SCRIPT BATCH_SCRIPT WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
+    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPI_SCRIPT BATCH_SCRIPT WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
         local varname=PSUBMIT_OPT_$i
         [ -z "${!varname}" ] || echo "$i=\"${!varname}\"" >> $dir/psubmit.opt
     done
@@ -146,7 +146,7 @@ function template_to_psubmitopts {
     local suffix="$2"
     local repl=""
     set +u
-    repl=$(echo "${repl}" $(construct_replacement_command "__QUEUE__" "$PSUBMIT_OPTS_QUEUE_NAME"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__QUEUE__" "$PSUBMIT_OPTS_QUEUE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__QUEUE_SUFFIX__" "$PSUBMIT_OPTS_QUEUE_SUFFIX"))
     repl=$(echo "${repl}" $(construct_replacement_command "__NODETYPE__" "$PSUBMIT_OPTS_NODETYPE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__RESOURCE_HANDLING__" "$PSUBMIT_OPTS_RESOURCE_HANDLING"))
