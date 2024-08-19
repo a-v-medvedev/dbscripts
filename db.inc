@@ -279,13 +279,17 @@ function bi_cmake() {
     local cmpath="$1"
     local opts="$2"
     [ -z "$m" ] && return
+    local cmake_binary=cmake
+    set +u
+    [ -v DNB_CMAKE_BINARY ] && cmake_binary="$DNB_CMAKE_BINARY"
+    set -u
     if this_mode_is_set 'b'; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
         [ -e build ] && rm -rf build
         mkdir -p build
         cd build
-        cmake $opts -DCMAKE_INSTALL_PREFIX=$DNB_INSTALL_DIR/${pkg}-${V} $cmpath
+        $cmake_binary $opts -DCMAKE_INSTALL_PREFIX=$DNB_INSTALL_DIR/${pkg}-${V} $cmpath
         make clean
         make -j${DNB_MAKE_PARALLEL_LEVEL}
         cd $DNB_INSTALL_DIR
