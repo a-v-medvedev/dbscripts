@@ -3,6 +3,8 @@ function update_setting() {
   local group=$2
   local setting=$3
   local variable_name=$4
+  which yq >& /dev/null || fatal "The utility yq must be available"
+  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
   if [ "$(cat $yaml | yq ".$group")" != "null" ]; then
     if [ "$(cat $yaml | yq ".$group.$setting")" != "null" ]; then
       set +u
@@ -16,6 +18,8 @@ function update_setting() {
 
 function parse_cfg_yaml() {
   local yaml=$1
+  which yq >& /dev/null || fatal "The utility yq must be available"
+  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
   if [ "$(cat $yaml | yq '.checks')" != "null" ]; then
   for check in $(cat $yaml | yq '.checks | join(" ")'); do 
     case $check in
@@ -145,6 +149,8 @@ function parse_cfg_yaml() {
 
 function exec_preamble_yaml() {
   local yaml=$1
+  which yq >& /dev/null || fatal "The utility yq must be available"
+  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
   nlines=$(cat $yaml | yq '.preamble | length')
   [ "$nlines" == 0 ] && return
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
@@ -158,6 +164,8 @@ function exec_preamble_yaml() {
 function exec_script_yaml() {
   local yaml=$1
   shift
+  which yq >& /dev/null || fatal "The utility yq must be available"
+  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
   nlines=$(cat $yaml | yq '.script | length')
   [ "$nlines" == 0 ] && return
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
@@ -170,6 +178,8 @@ function exec_script_yaml() {
 
 function parse_specific_yamls() {
   local yaml=$1
+  which yq >& /dev/null || fatal "The utility yq must be available"
+  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
   for spec in $(cat $yaml | yq '.specific | join(" ")'); do
     [ -f "$spec" ] && echo ">> dbscripts: Processing $spec:" && parse_cfg_yaml "$spec"
   done
