@@ -1,3 +1,8 @@
+#
+# NOTE: this code uses `yq` utility for YAML file processing. The easiest way to get it:
+#  $ wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ~/bin/yq
+#
+
 function update_setting() {
   local yaml=$1
   local group=$2
