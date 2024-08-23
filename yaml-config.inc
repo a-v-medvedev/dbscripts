@@ -19,6 +19,7 @@ function update_setting() {
       export $variable_name="$(cat $yaml | yq ".$group.$setting")"
     fi
   fi
+  return 0
 }
 
 function parse_cfg_yaml() {
@@ -38,6 +39,7 @@ function parse_cfg_yaml() {
 
   npkgs=$(cat $yaml | yq '.packages | length')
   if [ "$npkgs" != 0 ]; then
+  local pkgs=""
   for i in $(seq 0 1 $(expr $npkgs - 1)); do 
     local condition=$(cat $yaml | yq ".packages[$i][1]")
     local pkg=$(cat $yaml | yq ".packages[$i][0]")
@@ -45,11 +47,12 @@ function parse_cfg_yaml() {
     if [ "$condition" != "null" ]; then
       eval "$condition" || continue
     fi
-    set +u
-    [ -z "$DNB_PACKAGES" ] && export DNB_PACKAGES=$pkg && continue
-    set -u
-    export DNB_PACKAGES="$DNB_PACKAGES $pkg"
+    [ -z "$pkgs" ] && export pkgs=$pkg && continue
+    export pkgs="$pkgs $pkg"
   done
+  set +u
+  export DNB_PACKAGES="$pkgs $DNB_PACKAGES"
+  set -u
   fi
 
   ndirs=$(cat $yaml | yq '.target_dirs | length')
@@ -149,6 +152,7 @@ function parse_cfg_yaml() {
       done
     fi
   fi
+  return 0
 }
 
 
@@ -164,6 +168,7 @@ function exec_preamble_yaml() {
     #echo $line
     eval $line
   done
+  return 0
 }
 
 function parse_script_yaml() {
@@ -179,6 +184,7 @@ function parse_script_yaml() {
     cat $yaml | yq ".script[$i]" > "$script_file_name"
     [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && DNB_SCRIPT_LINES="$DNB_SCRIPT_LINES $script_file_name"
   done
+  return 0
 }
 
 function exec_script() {
@@ -190,6 +196,7 @@ function exec_script() {
     source $file $*
     rm -r $file
   done
+  return 0
 }
 
 function parse_specific_yamls() {
@@ -199,6 +206,7 @@ function parse_specific_yamls() {
   for spec in $(cat $yaml | yq '.specific | join(" ")'); do
     [ -f "$spec" ] && echo ">> dbscripts: Processing $spec:" && parse_cfg_yaml "$spec"
   done
+  return 0
 }
 
 function remove_temps() {
@@ -206,6 +214,7 @@ function remove_temps() {
   rm -f .dnb.script.*
   cd $DNB_ORIGINAL_PWD
   rm -f .dnb.script.*
+  return 0
 }
 
 [ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
