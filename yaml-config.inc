@@ -166,18 +166,29 @@ function exec_preamble_yaml() {
   done
 }
 
-function exec_script_yaml() {
+function parse_script_yaml() {
   local yaml=$1
   shift
   which yq >& /dev/null || fatal "The utility yq must be available"
   yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
   nlines=$(cat $yaml | yq '.script | length')
   [ "$nlines" == 0 ] && return
+  export DNB_SCRIPT_LINES=""
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
-    local line=$(cat $yaml | yq ".script[$i]")
-    [ "$line" == "null" ] && continue
-    echo ">> dbscripts: EXECUTE:" $line
-    eval $line
+    local script_file_name=$PWD/$(mktemp .dnb.script.XXXXXXXX)
+    cat $yaml | yq ".script[$i]" > "$script_file_name"
+    [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && DNB_SCRIPT_LINES="$DNB_SCRIPT_LINES $script_file_name"
+  done
+}
+
+function exec_script() {
+  [ -v DNB_SCRIPT_LINES ] || return 0	
+  [ -z "$DNB_SCRIPT_LINES" ] && return 0	
+  for file in $DNB_SCRIPT_LINES; do
+    [ -f "$file" ] || continue
+    echo ">> dbscripts: EXECUTE:" $(cat $file)
+    source $file $*
+    rm -r $file
   done
 }
 
@@ -193,11 +204,14 @@ function parse_specific_yamls() {
 function remove_temps() {
   cd $DNB_INSTALL_DIR
   rm -f .dnb.script.*
+  cd $DNB_ORIGINAL_PWD
+  rm -f .dnb.script.*
 }
 
 [ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
 [ -z "$DNB_YAML_CONFIG" ] && DNB_YAML_CONFIG=dnb.yaml
 
+DNB_ORIGINAL_PWD=$PWD
 trap remove_temps EXIT
 
 [ -f "$DNB_YAML_CONFIG" ] || fatal "can't open main config: $DNB_YAML_CONFIG"
@@ -205,15 +219,19 @@ exec_preamble_yaml "$DNB_YAML_CONFIG"
 
 started=$(date "+%s")
 echo "Download and build started at timestamp: $started."
+echo "----------"
 
 parse_specific_yamls "$DNB_YAML_CONFIG"
 parse_cfg_yaml "$DNB_YAML_CONFIG"
+parse_script_yaml "$DNB_YAML_CONFIG" $*
 
+[ -v DNB_INSTALL_DIR ] || DNB_INSTALL_DIR=""
+[ -z "$DNB_INSTALL_DIR" ] || cd $DNB_INSTALL_DIR   
 environment_check_main || fatal "Environment is not supported, exiting"
 
 echo ">> dbscripts: Package list: $DNB_PACKAGES"
 
-exec_script_yaml "$DNB_YAML_CONFIG" $*
+exec_script $*
 
 finished=$(date "+%s")
 echo "----------"
