@@ -88,6 +88,7 @@ function parse_cfg_yaml() {
       set +u
       [ -z "$DNB_VERSIONS" ] && export DNB_VERSIONS="$v" && continue
       set -u
+      ##echo $DNB_VERSIONS | egrep -q "(^$pkg:)|( $pkg:)" && continue 
       echo $DNB_VERSIONS | egrep -q "(^$pkg:)|( $pkg:)" && fatal "duplicate definition of version for pkg: $pkg"
       export DNB_VERSIONS="$DNB_VERSIONS $v"
     done
@@ -194,7 +195,7 @@ function exec_script() {
     [ -f "$file" ] || continue
     echo ">> dbscripts: EXECUTE:" $(cat $file)
     source $file $*
-    rm -r $file
+    rm -f $file
   done
   return 0
 }
@@ -222,6 +223,44 @@ function remove_temps() {
 
 DNB_ORIGINAL_PWD=$PWD
 trap remove_temps EXIT
+
+export DNB_CHECK_CCOMP=""
+export DNB_CHECK_CMAKE=""
+export DNB_CHECK_CUDA=""
+export DNB_CHECK_CXXCOMP=""
+export DNB_DEFAULT_BUILD_MODE=""
+export DNB_MAKE_PARALLEL_LEVEL=""
+export DNB_PACKAGES=""
+export DNB_SCRIPT_LINES=""
+export DNB_TARGET_DIRS=""
+export DNB_VERSIONS=""
+
+export PSUBMIT_OPT_NNODES=""
+export PSUBMIT_OPT_PPN=""
+export PSUBMIT_OPT_NTH=""
+export PSUBMIT_OPT_NGPUS=""
+export PSUBMIT_OPT_QUEUE=""
+
+export PSUBMIT_OPT_QUEUE_SUFFIX=""
+export PSUBMIT_OPT_CONSTRAINT=""
+export PSUBMIT_OPT_WHITELIST=""
+export PSUBMIT_OPT_BLACKLIST=""
+export PSUBMIT_OPT_COMMENT=""
+export PSUBMIT_OPT_BEFORE=""
+export PSUBMIT_OPT_AFTER=""
+export PSUBMIT_OPT_TARGET_BIN=""
+export PSUBMIT_OPT_JOB_NAME=""
+
+export PSUBMIT_OPT_ACCOUNT=""
+export PSUBMIT_OPT_TIME_LIMIT=""
+export PSUBMIT_OPT_NODETYPE=""
+export PSUBMIT_OPT_RESOURCE_HANDLING=""
+export PSUBMIT_OPT_GENERIC_RESOURCES=""
+
+export PSUBMIT_OPT_INIT_COMMANDS=""
+export PSUBMIT_OPT_INJOB_INIT_COMMANDS=""
+export PSUBMIT_OPT_MPIEXEC=""
+export PSUBMIT_OPT_BATCH=""
 
 [ -f "$DNB_YAML_CONFIG" ] || fatal "can't open main config: $DNB_YAML_CONFIG"
 exec_preamble_yaml "$DNB_YAML_CONFIG"
