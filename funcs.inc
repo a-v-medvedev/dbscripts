@@ -133,10 +133,13 @@ function construct_replacement_command() {
 function generate_psubmit_opt() {
     local dir=$1
     set +u
-    echo -n > $dir/psubmit.opt
+    local suffix=$2
+    local filename=$dir/psubmit.opt
+    [ -z "$suffix" ] || filename=$dir/psubmit_$suffix.opt
+    echo -n > $filename
     for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
         local varname=PSUBMIT_OPT_$i
-        [ -z "${!varname}" ] || echo "$i=\"${!varname}\"" >> $dir/psubmit.opt
+        [ -z "${!varname}" ] || echo "$i=\"${!varname}\"" >> $filename
     done
     set -u
 }
