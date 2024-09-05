@@ -70,16 +70,25 @@ function dubi_main {
 }
 
 function u_apply_patches() {
+    set +u
+    local directory=$1
+    set -u    
+    [ -z "$directory" ] && directory=$DNB_DBSCRIPTSDIR
+    if beginswith "$directory" "/"; then
+        fatal "u_apply_patches: directory name containing patches must be relative to DNB root."
+    fi
+    directory="$DNB_INSTALL_DIR/$directory"
+    [ -d "$directory" ] || fatal "u_apply_patches: directory doesn't exist: $directory"
     if this_mode_is_set "u"; then
-        N=$(ls -1 $DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
+        N=$(ls -1 $directory/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
         if [ "$N" -gt "0" ]; then
             cd ${pkg}-${V}.src
-            for p in ../$DNB_DBSCRIPTSDIR/patch_${pkg}-${V}_*.diff; do
-               set -x
-                patch -p0 < $p
-               set +x
+            for p in $directory/patch_${pkg}-${V}_*.diff; do
+                set -x
+                patch -p1 < $p
+                set +x
             done
-            cd ..
+	    cd $DNB_INSTALL_DIR
         fi
     fi
     return 0
@@ -222,16 +231,19 @@ function du_gitclone() {
     local addr="$1"
     set +u
     local flags="$2"
+    local branch="$3"
     set -u
     if this_mode_is_set 'd'; then
        [ -e "$pkg"-"$V".src ] && rm -rf "$pkg"-"$V".src
        mkdir -p "$pkg"-"$V".src
        cd "$pkg"-"$V".src
-       local branch="$V"
-       local XVER=$(get_field "${V}" "1" "^")
-       if [ "${XVER}" == "HEAD" ]; then
-           branch="master"
-           [ $(get_nfields "${V}" "^") == "2" ] && branch=$(get_field "${V}" "2" "^")
+       if [ -z "$branch" ]; then
+         branch="$V"
+         local XVER=$(get_field "${V}" "1" "^")
+         if [ "${XVER}" == "HEAD" ]; then
+             branch="master"
+             [ $(get_nfields "${V}" "^") == "2" ] && branch=$(get_field "${V}" "2" "^")
+         fi
        fi
        local recursive=""
        [ "$flags" == "recursive" ] && recursive="--recursive"
