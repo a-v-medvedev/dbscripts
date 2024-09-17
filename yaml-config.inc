@@ -71,6 +71,16 @@ function parse_cfg_yaml() {
   done
   fi
 
+  nlines=$(cat $yaml | yq '.environment | length')
+  if [ "$nlines" != 0 ]; then
+    for i in $(seq 0 1 $(expr $nlines - 1)); do 
+      local line=$(cat $yaml | yq ".environment[$i]")
+      [ "$line" == "null" ] && continue
+      echo $line
+      eval $line
+    done
+  fi
+
   nvers=$(cat $yaml | yq '.versions | length')
   if [ "$nvers" != 0 ]; then
   for i in $(seq 0 1 $(expr $nvers - 1)); do 
@@ -95,15 +105,6 @@ function parse_cfg_yaml() {
   done
   fi
 
-  nlines=$(cat $yaml | yq '.environment | length')
-  if [ "$nlines" != 0 ]; then
-    for i in $(seq 0 1 $(expr $nlines - 1)); do 
-      local line=$(cat $yaml | yq ".environment[$i]")
-      [ "$line" == "null" ] && continue
-      echo $line
-      eval $line
-    done
-  fi
 
   update_setting $yaml settings parallel_level DNB_MAKE_PARALLEL_LEVEL
   update_setting $yaml settings default_mode DNB_DEFAULT_BUILD_MODE
@@ -211,8 +212,10 @@ function parse_specific_yamls() {
 }
 
 function remove_temps() {
-  cd $DNB_INSTALL_DIR
-  rm -f .dnb.script.*
+  if [ -v DNB_INSTALL_DIR ]; then
+    cd $DNB_INSTALL_DIR
+    rm -f .dnb.script.*
+  fi
   cd $DNB_ORIGINAL_PWD
   rm -f .dnb.script.*
   return 0
