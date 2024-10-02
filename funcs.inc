@@ -40,7 +40,7 @@ function fail_if_variable_not_defined() {
 function is_set_to_true() {
     local varname=$1
     set +u
-    [ -z "${!varname}" -o "${!varname}" == 0 -o "${!varname}" == false -o "${!varname}" == FALSE ] && return 1
+    [ -z "${!varname}" -o "${!varname}" == 0 -o "${!varname}" == false -o "${!varname}" == FALSE -o "${!varname}" == OFF -o "${!varname}" == off ] && return 1
     set -u
     return 0
 }

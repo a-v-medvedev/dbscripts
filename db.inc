@@ -290,11 +290,12 @@ function du_svn() {
 function bi_cmake() {
     local cmpath="$1"
     local opts="$2"
+    set +u 
+    local commands="$3"
+    set -u
     [ -z "$m" ] && return
     local cmake_binary=cmake
-    set +u
     [ -v DNB_CMAKE_BINARY ] && cmake_binary="$DNB_CMAKE_BINARY"
-    set -u
     if this_mode_is_set 'b'; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
@@ -302,6 +303,7 @@ function bi_cmake() {
         mkdir -p build
         cd build
         $cmake_binary $opts -DCMAKE_INSTALL_PREFIX=$DNB_INSTALL_DIR/${pkg}-${V} $cmpath
+        [ ! -z "$commands" ] && eval "$commands"
         make clean
         make -j${DNB_MAKE_PARALLEL_LEVEL}
         cd $DNB_INSTALL_DIR
@@ -311,6 +313,7 @@ function bi_cmake() {
         cd ${pkg}-${V}.src
         [ ! -e build ] && fatal "${pkg}: no build directory in source tree"
         cd build
+        [ ! -z "$commands" ] && eval "$commands"
         make install
         cd $DNB_INSTALL_DIR
     fi
