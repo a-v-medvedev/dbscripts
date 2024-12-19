@@ -221,7 +221,7 @@ function dnb_hdf5() {
     generic_prolog "hdf5" $* || return 0
     du_direct_download https://support.hdfgroup.org/ftp/HDF5/releases/${pkg}-${V%.*}/${pkg}-${V}/src/${pkg}-${V}.tar.gz "${pkg}-${V}.tar.gz" 
     local COMMANDS=""
-    local OPTS="--enable-shared --disable-static --disable-fortran"
+    local OPTS="--enable-shared --disable-static --disable-fortran --enable-parallel CC=mpicc"
     bi_autoconf_make "$COMMANDS" "$OPTS"
     generic_epilog
     #i_make_binary_symlink "$pkg" "${V}" "$m"
