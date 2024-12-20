@@ -48,10 +48,13 @@ function set_path_variable_if_missing() {
     local var=$2       #NETCDF_C
     local default_value=$3
     local full_var_name=${prefix}_${var}_PATH   #NEMO_NETCDF_C_PATH
+    local full_var_name_flag=${full_var_name}_FLAG
+    [ -v "$full_var_name_flag" ] && return
     local use_prebuild_name=${prefix}_USE_PREBUILT_${var}
     if [ -z "${!use_prebuild_name}" -o "${!use_prebuild_name}" == FALSE ]; then
         [ -z "${!full_var_name}" ] || fatal "$full_var_name must not be set since $use_prebuild_name is set to TRUE";
-        export ${full_var_name}=${3};
+        export ${full_var_name}=${3}
+        export ${full_var_name_flag}=TRUE
     else
         [ -z "${!full_var_name}" ] && fatal "direct path to binaries is required: $full_var_name is not set";
     fi
@@ -145,8 +148,8 @@ function dnb_nemo() {
             # go with github:
             # du_github ...
         elif beginswith "$V" "5.0"; then
-            true
-            fatal "getting source code: not supported version of NEMO"
+            du_gitlab "" "nemo" "forge.nemo-ocean.eu/nemo"
+            #fatal "getting source code: not supported version of NEMO"
             # TODO: add something working for 5.0 from github
             # go with github:
             # du_github ...
@@ -174,13 +177,14 @@ function dnb_nemo() {
                     # download from https://zenodo.org/record/2640723#.ZGOnotJByV4  
                     wget -nv -O "$NEMO_WORKLOAD_ARCHIVE" "https://zenodo.org/record/2640723/files/$NEMO_WORKLOAD_ARCHIVE?download=1"
                 elif beginswith "$V" "4.2"; then
-		    true
-		    fatal "unsupported NEMO version for debug workload downloads."
+                    true
+                    fatal "unsupported NEMO version for debug workload downloads."
                     # TODO add workload download code for 4.2
-    		elif beginswith "$V" "5.0"; then
-		    true
-		    fatal "unsupported NEMO version for debug workload downloads."
-                    # TODO add workload download code for 5.0
+                elif beginswith "$V" "5.0"; then
+                    wget -nv -O "$NEMO_WORKLOAD_ARCHIVE" "$NEMO_WORKLOAD_URL/$NEMO_WORKLOAD_ARCHIVE"
+		            #true
+		    #fatal "unsupported NEMO version for debug workload downloads."
+            #        # TODO add workload download code for 5.0
                 else
                     fatal "For this NEMO version, we don't know how to get the debug workload." 
                 fi
@@ -228,8 +232,12 @@ EOF
         [ -z "$NEMO_MAKE_PARALLEL_LEVEL" ] && NEMO_MAKE_PARALLEL_LEVEL=$DNB_MAKE_PARALLEL_LEVEL
         set -u
         echo y | ./makenemo -n "$NEMO_CFG" clean_config || true
+        local add_keys=""
+        local del_keys=""
+        [ "$NEMO_KEYS_TO_ADD" == "-" ] || add_keys=add_key "$NEMO_KEYS_TO_ADD"
+        [ "$NEMO_KEYS_TO_DELETE" == "-" ] || del_keys=del_key "$NEMO_KEYS_TO_DELETE"
         set -x
-        ./makenemo -j $NEMO_MAKE_PARALLEL_LEVEL -r ORCA2_ICE_PISCES -n "$NEMO_CFG" -d "$NEMO_SUBCOMPONENTS" -m dnb add_key "$NEMO_KEYS_TO_ADD" del_key "$NEMO_KEYS_TO_DELETE" || fatal "makenemo failed."
+        ./makenemo -j $NEMO_MAKE_PARALLEL_LEVEL -r ORCA2_ICE_PISCES -n "$NEMO_CFG" -d "$NEMO_SUBCOMPONENTS" -m dnb $add_keys $del_keys || fatal "makenemo failed."
         set +x
         cd $DNB_INSTALL_DIR
 	[ -x $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/nemo ] || fatal "makenemo failed."
