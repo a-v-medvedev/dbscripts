@@ -283,6 +283,14 @@ EOF
                 
                 sed -i 's!\(<variable id="info_level".*>\).*</variable>!\1-2</variable>!' iodef.xml
                 sed -i 's/nn_itend[ ]*=.*/nn_itend=32/' namelist_cfg
+                local timdetail=""
+                beginswith "$V" "5.0" || timdetail="ln_timing_detail=.true.\n"
+                if grep -q ln_timing namelist_cfg; then 
+                    sed -i "s/ln_timing.*$/ln_timing=.true.\n${timdetail}sn_cfctl%l_runstat = .true./" namelist_cfg
+                else
+                    sed -i "s/&namctl/&\nln_timing=.true.\n${timdetail}sn_cfctl%l_runstat=.true./" namelist_cfg
+                fi 
+
                 mv *.xml namelist* ORCA2-generic/data
             ;;
             esac
