@@ -63,7 +63,11 @@ function set_path_variable_if_missing() {
 
 function dnb_xios() {
     generic_prolog "xios" $* || return 0	
-    du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}"
+    if [ "$V" == "trunk" ]; then
+        du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk"
+    else
+        du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}"
+    fi
     if this_mode_is_set 'b'; then
         set +u
         set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
@@ -131,6 +135,18 @@ EOF
         cp ${pkg}-${V}.src/inc/* ${pkg}-${V}/inc
     fi
     generic_epilog
+}
+
+function fill_keys() {
+    local keyword=$1
+    shift
+    [ "$*" == "-" ] && return
+    local result=""
+    for i in $*; do
+        result="$result $keyword $i"
+    done
+    echo $result
+    true
 }
 
 function dnb_nemo() {
@@ -232,10 +248,8 @@ EOF
         [ -z "$NEMO_MAKE_PARALLEL_LEVEL" ] && NEMO_MAKE_PARALLEL_LEVEL=$DNB_MAKE_PARALLEL_LEVEL
         set -u
         echo y | ./makenemo -n "$NEMO_CFG" clean_config || true
-        local add_keys=""
-        local del_keys=""
-        [ "$NEMO_KEYS_TO_ADD" == "-" ] || add_keys=add_key "$NEMO_KEYS_TO_ADD"
-        [ "$NEMO_KEYS_TO_DELETE" == "-" ] || del_keys=del_key "$NEMO_KEYS_TO_DELETE"
+        local add_keys=$(fill_keys add_key $NEMO_KEYS_TO_ADD)
+        local del_keys=$(fill_keys del_key $NEMO_KEYS_TO_DELETE)
         set -x
         ./makenemo -j $NEMO_MAKE_PARALLEL_LEVEL -r ORCA2_ICE_PISCES -n "$NEMO_CFG" -d "$NEMO_SUBCOMPONENTS" -m dnb $add_keys $del_keys || fatal "makenemo failed."
         set +x
