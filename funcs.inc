@@ -30,6 +30,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+function num_files_by_mask() {
+    local nf=$(ls -1 $1 2>/dev/null | wc -l)
+    echo $nf
+}
+
 function fail_if_variable_not_defined() {
     for v in $*; do
         [ -v $v ] || fatal "the required variable \"$v\" is not defined."
