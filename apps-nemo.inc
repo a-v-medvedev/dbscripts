@@ -262,7 +262,31 @@ EOF
         mkdir -p "$pkg-$V"
         cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/* "$pkg-$V"
         cd "$pkg-$V"
-        tar --skip-old-files -xvf "../${pkg}.dwn/$NEMO_WORKLOAD_ARCHIVE"
+
+        local oldpwd="$PWD"
+        for wld in $NEMO_AVAILABLE_WORKLOADS; do
+            case "$wld" in
+            ORCA2-generic)
+                [ -e "ORCA2-generic/scripts" -a -e "ORCA2-generic/data" ] && continue
+                mkdir -p ORCA2-generic
+                mkdir -p ORCA2-generic/scripts ORCA2-generic/data
+                [ -e "../scripts/fixforcings.sh" ] && cp -a ../scripts/fixforcings.sh ORCA2-generic/scripts
+                cd ORCA2-generic/data
+                tar --skip-old-files -xvf "../../../${pkg}.dwn/$NEMO_WORKLOAD_ARCHIVE"
+                local subdir=$(tar tf "../../../${pkg}.dwn/$NEMO_WORKLOAD_ARCHIVE" | head -n1 | grep '/$')
+                [ -z "$subdir" ] || mv $subdir/* .
+                if [ $(num_files_by_mask "*.gz") != 0 ]; then  
+                    for i in *.gz; do gunzip -f $i; done
+                fi
+                [ -e "../scripts/fixforcings.sh" ] && ../scripts/fixforcings.sh
+                cd $oldpwd
+                
+                sed -i 's!\(<variable id="info_level".*>\).*</variable>!\1-2</variable>!' iodef.xml
+                sed -i 's/nn_itend[ ]*=.*/nn_itend=32/' namelist_cfg
+                mv *.xml namelist* ORCA2-generic/data
+            ;;
+            esac
+        done  
         cd $DNB_INSTALL_DIR
     fi
     generic_epilog
