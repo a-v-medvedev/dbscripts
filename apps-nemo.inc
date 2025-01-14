@@ -65,6 +65,20 @@ function dnb_xios() {
     generic_prolog "xios" $* || return 0	
     if [ "$V" == "trunk" ]; then
         du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk"
+    elif beginswith "$V" "r"; then
+        local rev=$(echo "$V" | tr -d 'r')
+        du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS@$rev"
+        if this_mode_is_set 'u'; then
+            [ -d "${pkg}-${V}.src" ] || fatal "$pkg: no downloaded source code directory"
+            if [ -d "${pkg}-${V}.src/trunk" ]; then
+                cd "${pkg}-${V}.src"
+                mkdir 1
+                mv [^1]* 1
+                mv 1/trunk/* .
+                rm -rf 1 
+                cd $DNB_INSTALL_DIR
+            fi
+        fi
     else
         du_svn "https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/${pkg}-${V}"
     fi
