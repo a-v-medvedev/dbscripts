@@ -26,7 +26,7 @@ function parse_cfg_yaml() {
   local yaml=$1
   which yq >& /dev/null || fatal "The utility yq must be available"
   yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
-  if [ "$(cat $yaml | yq '.checks')" != "null" ]; then
+  if [ "$(cat $yaml | yq '.checks')" != "null" -a ! -v DNB_OMIT_CHECKS ]; then
   for check in $(cat $yaml | yq '.checks | join(" ")'); do 
     case $check in
       cuda*) export DNB_CHECK_CUDA=$(echo $check | cut -d: -f2 -s);;
@@ -194,7 +194,11 @@ function exec_script() {
   [ -z "$DNB_SCRIPT_LINES" ] && return 0	
   for file in $DNB_SCRIPT_LINES; do
     [ -f "$file" ] || continue
-    echo ">> dbscripts: EXECUTE:" $(cat $file)
+    if [ $(head -c1 "$file") == "@" ]; then
+      sed -i 's/^@//' "$file"
+    else
+      echo ">> dbscripts: EXECUTING:" $(cat $file)
+    fi
     source $file $*
     rm -f $file
   done
