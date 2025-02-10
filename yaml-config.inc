@@ -199,7 +199,7 @@ function exec_script() {
     else
       echo ">> dbscripts: EXECUTING:" $(cat $file)
     fi
-    source $file $*
+    source $file $* || true
     rm -f $file
   done
   return 0
