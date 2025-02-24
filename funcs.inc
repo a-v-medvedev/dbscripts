@@ -144,6 +144,12 @@ function generate_psubmit_opt() {
     set -u
 }
 
+function i_psubmit_opt() {
+    local dir=${1:-"${pkg}-${V}"}
+    local suffix=${2:-""}
+    generate_psubmit_opt "$dir" "$suffix"
+}
+
 function template_to_psubmitopts {
     local dir=$1
     local suffix="$2"
