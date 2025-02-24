@@ -1,22 +1,27 @@
 #
 # NOTE: this code uses `yq` utility for YAML file processing. The easiest way to get it:
+#
 #  $ wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ~/bin/yq
 #
+# You may set DNB_YQ as exact path to right yq binary
+#
+
+DNB_YQ=${DNB_YQ:-"yq"}
 
 function update_setting() {
   local yaml=$1
   local group=$2
   local setting=$3
   local variable_name=$4
-  which yq >& /dev/null || fatal "The utility yq must be available"
-  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
-  if [ "$(cat $yaml | yq ".$group")" != "null" ]; then
-    if [ "$(cat $yaml | yq ".$group.$setting")" != "null" ]; then
+  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
+  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  if [ "$(cat $yaml | ${DNB_YQ} ".$group")" != "null" ]; then
+    if [ "$(cat $yaml | ${DNB_YQ} ".$group.$setting")" != "null" ]; then
       set +u
       local val=${!variable_name}
       set -u
       [ -z "$val" ] || { echo "WARNING: overriding $group/$setting setting is ignored in $yaml: preserved value $variable_name=$val"; return; }
-      export $variable_name="$(cat $yaml | yq ".$group.$setting")"
+      export $variable_name="$(cat $yaml | ${DNB_YQ} ".$group.$setting")"
     fi
   fi
   return 0
@@ -24,10 +29,11 @@ function update_setting() {
 
 function parse_cfg_yaml() {
   local yaml=$1
-  which yq >& /dev/null || fatal "The utility yq must be available"
-  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
-  if [ "$(cat $yaml | yq '.checks')" != "null" -a ! -v DNB_OMIT_CHECKS ]; then
-  for check in $(cat $yaml | yq '.checks | join(" ")'); do 
+  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
+  echo -ne "---\naaa: [ bbb,ccc ]\n..." | ${DNB_YQ} e "." 2>/dev/null | grep -q "bbb, ccc" || fatal "yq utility is disfunctional. Wrong version?"
+  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  if [ "$(cat $yaml | ${DNB_YQ} '.checks')" != "null" -a ! -v DNB_OMIT_CHECKS ]; then
+  for check in $(cat $yaml | ${DNB_YQ} '.checks | join(" ")'); do 
     case $check in
       cuda*) export DNB_CHECK_CUDA=$(echo $check | cut -d: -f2 -s);;
       cmake) export DNB_CHECK_CMAKE=$(echo $check | cut -d: -f2 -s);;
@@ -37,12 +43,12 @@ function parse_cfg_yaml() {
   done
   fi
 
-  npkgs=$(cat $yaml | yq '.packages | length')
+  npkgs=$(cat $yaml | ${DNB_YQ} '.packages | length')
   if [ "$npkgs" != 0 ]; then
   local pkgs=""
   for i in $(seq 0 1 $(expr $npkgs - 1)); do 
-    local condition=$(cat $yaml | yq ".packages[$i][1]")
-    local pkg=$(cat $yaml | yq ".packages[$i][0]")
+    local condition=$(cat $yaml | ${DNB_YQ} ".packages[$i][1]")
+    local pkg=$(cat $yaml | ${DNB_YQ} ".packages[$i][0]")
     [ "$pkg" == "null" ] && continue
     if [ "$condition" != "null" ]; then
       eval "$condition" || continue
@@ -55,11 +61,11 @@ function parse_cfg_yaml() {
   set -u
   fi
 
-  ndirs=$(cat $yaml | yq '.target_dirs | length')
+  ndirs=$(cat $yaml | ${DNB_YQ} '.target_dirs | length')
   if [ "$ndirs" != 0 ]; then
   for i in $(seq 0 1 $(expr $ndirs - 1)); do 
-    local condition=$(cat $yaml | yq ".target_dirs[$i][1]")
-    local dir=$(cat $yaml | yq ".target_dirs[$i][0]")
+    local condition=$(cat $yaml | ${DNB_YQ} ".target_dirs[$i][1]")
+    local dir=$(cat $yaml | ${DNB_YQ} ".target_dirs[$i][0]")
     [ "$dir" == "null" ] && continue
     if [ "$condition" != "null" ]; then
       eval "$condition" || continue
@@ -71,21 +77,21 @@ function parse_cfg_yaml() {
   done
   fi
 
-  nlines=$(cat $yaml | yq '.environment | length')
+  nlines=$(cat $yaml | ${DNB_YQ} '.environment | length')
   if [ "$nlines" != 0 ]; then
     for i in $(seq 0 1 $(expr $nlines - 1)); do 
-      local line=$(cat $yaml | yq ".environment[$i]")
+      local line=$(cat $yaml | ${DNB_YQ} ".environment[$i]")
       [ "$line" == "null" ] && continue
       echo $line
       eval $line
     done
   fi
 
-  nvers=$(cat $yaml | yq '.versions | length')
+  nvers=$(cat $yaml | ${DNB_YQ} '.versions | length')
   if [ "$nvers" != 0 ]; then
   for i in $(seq 0 1 $(expr $nvers - 1)); do 
-    local condition=$(cat $yaml | yq ".versions[$i].condition")
-    local versions_array=$(cat $yaml | yq ".versions[$i].list | join(\" \")")
+    local condition=$(cat $yaml | ${DNB_YQ} ".versions[$i].condition")
+    local versions_array=$(cat $yaml | ${DNB_YQ} ".versions[$i].list | join(\" \")")
     [ "$versions_array" == "null" ] && continue
     [ "$versions_array" == "" ] && continue
     if [ "$condition" != "null" ]; then
@@ -136,14 +142,14 @@ function parse_cfg_yaml() {
   update_setting $yaml psubmit mpi_script PSUBMIT_OPT_MPIEXEC
   update_setting $yaml psubmit batch_script PSUBMIT_OPT_BATCH
 
-  if [ "$(cat $yaml | yq '.per-package')" != "null" ]; then
-    local pkgs=$(cat $yaml | yq '.per-package | keys | .[]')
+  if [ "$(cat $yaml | ${DNB_YQ} '.per-package')" != "null" ]; then
+    local pkgs=$(cat $yaml | ${DNB_YQ} '.per-package | keys | .[]')
     if [ "$pkgs" != "null" ]; then
       for pkg in $pkgs; do
         local v=DNB_PACKAGE_INIT_SCRIPT__$(echo "$pkg" | sed 's/-/_/g')
         [ -v $v ] && echo "WARNING: not overriding the per-package script for package: $pkg" && continue
         local script_file_name=$PWD/$(mktemp .dnb.script.XXXXXXXX)
-        cat $yaml | yq ".per-package.$pkg[0]" > "$script_file_name"
+        cat $yaml | ${DNB_YQ} ".per-package.$pkg[0]" > "$script_file_name"
         [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && eval $v=$script_file_name
         #if [ -v $v ]; then
         #  echo ">>>>  >>>> $v:"
@@ -160,12 +166,12 @@ function parse_cfg_yaml() {
 
 function exec_preamble_yaml() {
   local yaml=$1
-  which yq >& /dev/null || fatal "The utility yq must be available"
-  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
-  nlines=$(cat $yaml | yq '.preamble | length')
+  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
+  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  nlines=$(cat $yaml | ${DNB_YQ} '.preamble | length')
   [ "$nlines" == 0 ] && return
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
-    local line=$(cat $yaml | yq ".preamble[$i]")
+    local line=$(cat $yaml | ${DNB_YQ} ".preamble[$i]")
     [ "$line" == "null" ] && continue
     #echo $line
     eval $line
@@ -176,14 +182,14 @@ function exec_preamble_yaml() {
 function parse_script_yaml() {
   local yaml=$1
   shift
-  which yq >& /dev/null || fatal "The utility yq must be available"
-  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
-  nlines=$(cat $yaml | yq '.script | length')
+  which ${DNB_YQ} >& /dev/null || fatal "The utility ${DNB_YQ} must be available"
+  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: ${DNB_YQ} e \".\" $yaml."
+  nlines=$(cat $yaml | ${DNB_YQ} '.script | length')
   [ "$nlines" == 0 ] && return
   export DNB_SCRIPT_LINES=""
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
     local script_file_name=$PWD/$(mktemp .dnb.script.XXXXXXXX)
-    cat $yaml | yq ".script[$i]" > "$script_file_name"
+    cat $yaml | ${DNB_YQ} ".script[$i]" > "$script_file_name"
     [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && DNB_SCRIPT_LINES="$DNB_SCRIPT_LINES $script_file_name"
   done
   return 0
@@ -207,9 +213,9 @@ function exec_script() {
 
 function parse_specific_yamls() {
   local yaml=$1
-  which yq >& /dev/null || fatal "The utility yq must be available"
-  yq e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
-  for spec in $(cat $yaml | yq '.specific | join(" ")'); do
+  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
+  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  for spec in $(cat $yaml | ${DNB_YQ} '.specific | join(" ")'); do
     [ -f "$spec" ] && echo ">> dbscripts: Processing $spec:" && parse_cfg_yaml "$spec"
   done
   return 0
