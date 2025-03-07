@@ -74,6 +74,7 @@ function i_patch_single_file() {
     local ptch="$2"
     if this_mode_is_set "i"; then
         if [ -e "$filetopatch" -a -e "$ptch" ]; then
+            echo ">> dbscripts: applying $(basename $ptch) to $filetopatch:"
             patch --dry-run -s -N -i $ptch $filetopatch && patch -i $ptch $filetopatch || true
         fi
     fi
@@ -91,16 +92,17 @@ function u_apply_patches() {
     directory="$DNB_INSTALL_DIR/$directory"
     [ -d "$directory" ] || fatal "u_apply_patches: directory doesn't exist: $directory"
     if this_mode_is_set "u"; then
-        N=$(ls -1 $directory/patch_${pkg}-${V}_*.diff 2>/dev/null | wc -l)
-        if [ "$N" -gt "0" ]; then
-            cd ${pkg}-${V}.src
-            for p in $directory/patch_${pkg}-${V}_*.diff; do
-                set -x
-                patch -p1 < $p
-                set +x
-            done
-	    cd $DNB_INSTALL_DIR
-        fi
+        n1=$(num_files_by_mask $directory/patch_${pkg}-${V}_*.diff)
+        n2=$(num_files_by_mask $directory/patch_${pkg}-ANY_*.diff)
+        [ "$n1" == 0 -a "$n2" == 0 ] && return 0
+        cd ${pkg}-${V}.src
+        for p in $directory/patch_${pkg}-${V}_*.diff $directory/patch_${pkg}-ANY_*.diff; do
+            if [ -e "$p" ]; then
+                echo ">> dbscripts: applying $(basename $p):"
+                patch --dry-run -s -N -p1 -i $p && patch -p1 -i $p || true
+            fi
+        done
+        cd $DNB_INSTALL_DIR
     fi
     return 0
 }
