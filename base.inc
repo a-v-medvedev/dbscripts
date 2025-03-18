@@ -95,7 +95,9 @@ function is_any_char_present() {
 
 function this_mode_is_set {
     local f="$1"
+    set +u
     [ -z "$m" ] && return 1
+    set -u
     [  "1" != $(get_num_chars "$f") ] && echo "is_flag_set: wrong args" && exit 1
     is_any_char_present "$m" "$f" && return 0
     return 1
