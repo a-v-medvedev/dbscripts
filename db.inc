@@ -387,7 +387,7 @@ function i_make() {
     if this_mode_is_set "i"; then
         set +u
         bi_make "$1" "$2" "$3"
-	set -u
+        set -u
     fi
     return 0
 }
@@ -430,6 +430,7 @@ function generic_prolog() {
 function generic_epilog() {
     i_make_binary_symlink
     i_cache_save_this_pkg_record "$pkg" "$V" "$m"
+    unset pkg V m
     return 0
 }
 
