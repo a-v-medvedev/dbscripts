@@ -96,7 +96,7 @@ function is_any_char_present() {
 function this_mode_is_set {
     local f="$1"
     local md=${2:-}
-    [ ! -v 2 -a ! -v m ] && { echo "this_mode_is_set: variable \"m\" is not set: forgotten generic_prolog?"; exit 1; }
+    [ -z "$md" -a ! -v m ] && { echo "this_mode_is_set: variable \"m\" is not set: forgotten generic_prolog?"; exit 1; }
     [ -v m ] && md=${md:=$m}
     [ -z "$md" ] && return 1
     [  "1" != $(get_num_chars "$f") ] && { echo "this_mode_is_set: wrong args"; exit 1; }
@@ -107,7 +107,7 @@ function this_mode_is_set {
 function any_mode_is_set {
     local f=$1
     local md=${2:-}
-    [ ! -v 2 -a ! -v m ] && { echo "any_mode_is_set: variable \"m\" is not set: forgotten generic_prolog?"; exit 1; }
+    [ -z "$md" -a ! -v m ] && { echo "any_mode_is_set: variable \"m\" is not set: forgotten generic_prolog?"; exit 1; }
     [ -v m ] && md=${md:=$m}
     [ -z "$md" ] && return 1
     [  "1" -gt $(get_num_chars "$f") ] && { echo "any_mode_is_set: wrong args"; exit 1; }

@@ -57,7 +57,7 @@ function dubi_main {
         this_mode_is_set "i" "$mode" && was_installed=1
     done
     if [ ! -z "$was_installed" ]; then
-        check_bash_func_declared dnb_sandbox && echo ">> dbscripts: dubi_main: call: dnb_sandbox" && dnb_sandbox
+        check_bash_func_declared dnb_sandbox && echo ">> dbscripts: dubi_main: call: dnb_sandbox" && m=i && dnb_sandbox
     fi
  #-------------
     LIST2=$(print_all_exec_files "$DNB_TARGET_DIRS" "$started")
