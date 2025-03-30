@@ -144,7 +144,7 @@ function generate_psubmit_opt() {
     echo -n > $filename
     for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
         local varname=PSUBMIT_OPT_$i
-        [ -z "${!varname}" ] || echo "$i=\"${!varname}\"" >> $filename
+        [ -z "${!varname}" ] || echo $i=\'${!varname}\' >> $filename
     done
     set -u
 }
