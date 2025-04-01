@@ -142,7 +142,7 @@ function generate_psubmit_opt() {
     local filename=$dir/psubmit.opt
     [ -z "$suffix" ] || filename=$dir/psubmit_$suffix.opt
     echo -n > $filename
-    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
+    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT RESERVATION COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
         local varname=PSUBMIT_OPT_$i
         [ -z "${!varname}" ] || echo $i=\'${!varname}\' >> $filename
     done
@@ -170,6 +170,7 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__WHITELIST__" "$PSUBMIT_OPTS_WHITELIST"))
     repl=$(echo "${repl}" $(construct_replacement_command "__BLACKLIST__" "$PSUBMIT_OPTS_BLACKLIST"))
     repl=$(echo "${repl}" $(construct_replacement_command "__ACCOUNT__" "$PSUBMIT_OPTS_ACCOUNT"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__RESERVATION__" "$PSUBMIT_OPTS_RESERVATION"))
     repl=$(echo "${repl}" $(construct_replacement_command "__COMMENT__" "$PSUBMIT_OPTS_COMMENT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__BEFORE__" "$PSUBMIT_OPTS_BEFORE"))
     repl=$(echo "${repl}" $(construct_replacement_command "__AFTER__" "$PSUBMIT_OPTS_AFTER"))

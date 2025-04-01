@@ -132,6 +132,7 @@ function parse_cfg_yaml() {
   update_setting $yaml psubmit job_name PSUBMIT_OPT_JOB_NAME
 
   update_setting $yaml psubmit account PSUBMIT_OPT_ACCOUNT
+  update_setting $yaml psubmit reservation PSUBMIT_OPT_RESERVATION
   update_setting $yaml psubmit time_limit PSUBMIT_OPT_TIME_LIMIT
   update_setting $yaml psubmit node_type PSUBMIT_OPT_NODETYPE
   update_setting $yaml psubmit resource_handling PSUBMIT_OPT_RESOURCE_HANDLING
@@ -265,6 +266,7 @@ unset PSUBMIT_OPT_TARGET_BIN
 unset PSUBMIT_OPT_JOB_NAME
 
 unset PSUBMIT_OPT_ACCOUNT
+unset PSUBMIT_OPT_RESERVATION
 unset PSUBMIT_OPT_TIME_LIMIT
 unset PSUBMIT_OPT_NODETYPE
 unset PSUBMIT_OPT_RESOURCE_HANDLING
