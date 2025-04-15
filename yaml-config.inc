@@ -8,19 +8,25 @@
 
 DNB_YQ=${DNB_YQ:-"yq"}
 
+function yq_check() {
+  local yaml=$1
+  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available (tried to exec: ${DNB_YQ})."
+  echo -ne "---\naaa: [ bbb,ccc ]\n..." | ${DNB_YQ} e "." 2>/dev/null | grep -q "bbb, ccc" || fatal "yq utility is disfunctional (tried to exec: ${DNB_YQ}). Wrong version?"
+  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+}
+
 function update_setting() {
   local yaml=$1
   local group=$2
   local setting=$3
   local variable_name=$4
-  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
-  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  yq_check "$yaml"
   if [ "$(cat $yaml | ${DNB_YQ} ".$group")" != "null" ]; then
     if [ "$(cat $yaml | ${DNB_YQ} ".$group.$setting")" != "null" ]; then
       set +u
       local val=${!variable_name}
       set -u
-      [ -z "$val" ] || { echo "WARNING: overriding $group/$setting setting is ignored in $yaml: preserved value $variable_name=$val"; return; }
+      [ -z "$val" ] || { echo ">> dbscripts: WARNING: overriding $group/$setting setting is ignored in $yaml: preserved value $variable_name=$val"; return; }
       export $variable_name="$(cat $yaml | ${DNB_YQ} ".$group.$setting")"
     fi
   fi
@@ -29,9 +35,7 @@ function update_setting() {
 
 function parse_cfg_yaml() {
   local yaml=$1
-  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
-  echo -ne "---\naaa: [ bbb,ccc ]\n..." | ${DNB_YQ} e "." 2>/dev/null | grep -q "bbb, ccc" || fatal "yq utility is disfunctional. Wrong version?"
-  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  yq_check "$yaml"
   if [ "$(cat $yaml | ${DNB_YQ} '.checks')" != "null" -a ! -v DNB_OMIT_CHECKS ]; then
   for check in $(cat $yaml | ${DNB_YQ} '.checks | join(" ")'); do 
     case $check in
@@ -148,16 +152,10 @@ function parse_cfg_yaml() {
     if [ "$pkgs" != "null" ]; then
       for pkg in $pkgs; do
         local v=DNB_PACKAGE_INIT_SCRIPT__$(echo "$pkg" | sed 's/-/_/g')
-        [ -v $v ] && echo "WARNING: not overriding the per-package script for package: $pkg" && continue
+        [ -v $v ] && echo ">> dbscripts: WARNING: not overriding the per-package script for package: $pkg" && continue
         local script_file_name=$PWD/$(mktemp .dnb.script.XXXXXXXX)
         cat $yaml | ${DNB_YQ} ".per-package.$pkg[0]" > "$script_file_name"
         [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && eval $v=$script_file_name
-        #if [ -v $v ]; then
-        #  echo ">>>>  >>>> $v:"
-        #  cat "${!v}" 
-        #  echo ">>>>>>>>>>"
-        #  export $v
-        #fi
       done
     fi
   fi
@@ -167,8 +165,7 @@ function parse_cfg_yaml() {
 
 function exec_preamble_yaml() {
   local yaml=$1
-  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
-  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  yq_check "$yaml"
   nlines=$(cat $yaml | ${DNB_YQ} '.preamble | length')
   [ "$nlines" == 0 ] && return
   for i in $(seq 0 1 $(expr $nlines - 1)); do 
@@ -183,8 +180,7 @@ function exec_preamble_yaml() {
 function parse_script_yaml() {
   local yaml=$1
   shift
-  which ${DNB_YQ} >& /dev/null || fatal "The utility ${DNB_YQ} must be available"
-  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: ${DNB_YQ} e \".\" $yaml."
+  yq_check "$yaml"
   nlines=$(cat $yaml | ${DNB_YQ} '.script | length')
   [ "$nlines" == 0 ] && return
   export DNB_SCRIPT_LINES=""
@@ -214,8 +210,7 @@ function exec_script() {
 
 function parse_specific_yamls() {
   local yaml=$1
-  which ${DNB_YQ} >& /dev/null || fatal "The utility yq must be available"
-  ${DNB_YQ} e "." "$yaml" >& /dev/null || fatal "The config file $yaml seems to be invalid: check it with: yq e \".\" $yaml."
+  yq_check "$yaml"
   for spec in $(cat $yaml | ${DNB_YQ} '.specific | join(" ")'); do
     [ -f "$spec" ] && echo ">> dbscripts: Processing $spec:" && parse_cfg_yaml "$spec"
   done
@@ -281,7 +276,7 @@ unset PSUBMIT_OPT_BATCH
 exec_preamble_yaml "$DNB_YAML_CONFIG"
 
 started=$(date "+%s")
-echo "Download and build started at timestamp: $started."
+echo "Started at timestamp: $started."
 echo "----------"
 
 parse_specific_yamls "$DNB_YAML_CONFIG"

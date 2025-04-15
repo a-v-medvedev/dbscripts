@@ -48,7 +48,7 @@ function verify_compiler_version {
     if [ "$ret" != 0 ]; then
         [ -z "$cctype" ] && cctype='<unknown>'
         [ -z "$ccvers" ] && ccvers='<unknown>'
-        info "Using compiler $compiler, compiler type: $cctype, version $ccvers";
+        info ">> dbscripts: Using compiler $compiler, compiler type: $cctype, version $ccvers";
     fi
     return 0
 }
@@ -61,7 +61,7 @@ function verify_cuda_version {
     echo "$vout" | grep -q 'Cuda compilation tools, release' || fatal "can't detect CUDA version"
     export cudavers=$(echo "$vout" | awk 'BEGIN{RS=","} /release/ { print $2 }')
     version_is_less "$cudavers" "$cudaminvers" && fatal "CUDA version from path $DNB_CUDA_HOME is $cudavers; it is not supported; minimal supported version is ${cudaminvers}.";
-    info "Using CUDA path ${DNB_CUDA_HOME}, version: ${cudavers}" 
+    info ">> dbscripts: Using CUDA path ${DNB_CUDA_HOME}, version: ${cudavers}" 
     return 0
 }
 
@@ -70,7 +70,7 @@ function verify_cmake_version() {
     [ -z "$(which cmake)" ] && fatal "no cmake in PATH"
     local cmakevers=$(cmake --version | head -n 1 | awk '{print $3}')
 	version_is_less "$cmakevers" "$cmakeminvers" && fatal "cmake of version $CMAKE_VERSION is not supported; minimal supported version is $DNB_CMAKE_MINIMAL_VERSION."
-	info "Using cmake version $cmakevers";
+	info ">> dbscripts: Using cmake version $cmakevers";
 	return 0
 }
 
