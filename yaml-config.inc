@@ -6,7 +6,6 @@
 # You may set DNB_YQ as exact path to right yq binary
 #
 
-DNB_YQ=${DNB_YQ:-"yq"}
 
 function yq_check() {
   local yaml=$1
@@ -229,8 +228,19 @@ function remove_temps() {
 
 [ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
 [ -z "$DNB_YAML_CONFIG" ] && DNB_YAML_CONFIG=dnb.yaml
-
 DNB_ORIGINAL_PWD=$PWD
+
+if [ -v DNB_YQ_DOWNLOAD_URL ]; then
+    [ -v DNB_YQ ] && fatal "DNB_YQ_DOWNLOAD_URL and DNB_YQ are set at the same time. Choose one option."
+    export DNB_YQ=$DNB_ORIGINAL_PWD/$DNB_DBSCRIPTSDIR/yq
+    if [ ! -f "$DNB_YQ" ]; then
+        wget "$DNB_YQ_DOWNLOAD_URL" -O $DNB_DBSCRIPTSDIR/yq || fatal "Failed to download yq utility, url: $DNB_YQ_DOWNLOAD_URL"
+        chmod +x "$DNB_YQ"
+    fi
+fi
+
+DNB_YQ=${DNB_YQ:-"yq"}
+
 trap remove_temps EXIT
 
 unset DNB_CHECK_CCOMP
