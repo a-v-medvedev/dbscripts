@@ -332,34 +332,30 @@ function dnb_tensorflow() {
 }
 
 function dnb_netcdf-fortran() {
-    #local pkg="netcdf-fortran"
-    #environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
-    #local m=$(get_field "$1" 2 "=")
-    #local V=$(get_field "$2" 2 "=")
     generic_prolog "netcdf-fortran" $* || return 0
     du_github "Unidata" "v"
+    local DNB_NETCDF_FORTRAN_NETCDF_C_PATH=${DNB_NETCDF_FORTRAN_NETCDF_C_PATH:-$DNB_INSTALL_DIR/netcdf-c.bin}
+    local CMDS=""
     local OPTS=""
-    OPTS="$OPTS FCFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-I$DNB_INSTALL_DIR/netcdf-c.bin/include"
-#   for newest gfortran versions: OPTS="$OPTS FCFLAGS=-fallow-argument-mismatch""
-    local CMDS="export LDFLAGS=\"-L$DNB_INSTALL_DIR/netcdf-c.bin/lib -Wl,-rpath,$DNB_INSTALL_DIR/netcdf-c.bin/lib\""
+    OPTS="$OPTS FCFLAGS=-fPIC CFLAGS=-fPIC" 
+    OPTS="$OPTS CPPFLAGS=-I$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/include"
+    OPTS="$OPTS -Wl,-L,$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/lib,-rpath,$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/lib"
+    [ -v DNB_NETCDF_FORTRAN_FC ] && OPTS="$OPTS FC=$DNB_NETCDF_FORTRAN_FC"
+    # NOTE: for newest gfortran versions: OPTS="$OPTS FCFLAGS+=${SPACE}-fallow-argument-mismatch"
     bi_autoconf_make "$CMDS" "$OPTS"
     generic_epilog
-    #i_make_binary_symlink "$pkg" "${V}" "$m"
 }
 
 function dnb_netcdf-c() {
-    #local pkg="netcdf-c"
-    #environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
-    #local m=$(get_field "$1" 2 "=")
-    #local V=$(get_field "$2" 2 "=")
     generic_prolog "netcdf-c" $* || return 0	
     du_github "Unidata" "v"
+    local DNB_NETCDF_C_HDF5_PATH=${DNB_NETCDF_C_HDF5_PATH:-$DNB_INSTALL_DIR/hdf5.bin}
     local OPTS=""
-    OPTS="$OPTS CPPFLAGS=-I$DNB_INSTALL_DIR/hdf5.bin/include"
-    OPTS="$OPTS LDFLAGS=-L$DNB_INSTALL_DIR/hdf5.bin/lib"
+    OPTS="$OPTS CPPFLAGS=-I$DNB_NETCDF_C_HDF5_PATH/include"
+    OPTS="$OPTS LDFLAGS=-L$DNB_NETCDF_C_HDF5_PATH/lib"
     OPTS="$OPTS --enable-parallel4"
+    [ -v DNB_NETCDF_C_CC ] && OPTS="$OPTS CC=$DNB_NETCDF_C_CC"
     bi_autoconf_make "" "$OPTS"
     generic_epilog
-    #i_make_binary_symlink "$pkg" "${V}" "$m"
 }
 
