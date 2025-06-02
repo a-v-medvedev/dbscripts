@@ -136,9 +136,10 @@ function construct_replacement_command() {
 }
 
 function generate_psubmit_opt() {
-    local dir=$1
     set +u
+    local dir=$1
     local suffix=$2
+    [ -z "$dir" ] && dir="."
     local filename=$dir/psubmit.opt
     [ -z "$suffix" ] || filename=$dir/psubmit_$suffix.opt
     echo -n > $filename

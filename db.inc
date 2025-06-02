@@ -363,7 +363,7 @@ function bi_make() {
     set +u
     local files="$3"
     set -u
-    if any_mode_is_set "bi"; then
+    if this_mode_is_set "b"; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
         eval "$commands"
@@ -415,6 +415,46 @@ function i_direct_copy() {
         cd $DNB_INSTALL_DIR
     fi
     return 0
+}
+
+## -- mksandbox
+function i_mksandbox() {
+    local sandbox_dir=sandbox
+    set +u
+    [ -z "$1" ] || sandbox_dir=$1
+    set -u
+    mkdir -p $sandbox_dir
+    cd $sandbox_dir
+    if [ -v DNB_SANDBOX_SUBDIR ]; then
+        [ "$DNB_SANDBOX_SUBDIR" == "." ] || mkdir -p "$DNB_SANDBOX_SUBDIR" && cd "$DNB_SANDBOX_SUBDIR"
+    fi
+    export DNB_SANDBOX=$PWD
+    cd $DNB_INSTALL_DIR
+}
+
+## -- copyscripts
+function i_copy_scripts() {
+    for mask in "$DNB_INSTALL_DIR/scripts/*.sh" "$DNB_INSTALL_DIR/scripts/generic/*.sh" "$DNB_INSTALL_DIR/scripts/generic/$DNB_MACHINE_SCRIPTS_FOLDER/*.sh"; do
+        if [ "$(num_files_by_mask $mask)" != 0 ]; then
+            for i in $mask; do
+                case $i in
+                */scalability_*) ;;   
+                *) ln -sf $i .;;
+                esac 
+            done
+        fi
+    done
+}
+
+## -- copyscalscripts
+function i_copy_scal_scripts() {
+    for mask in $DNB_INSTALL_DIR/scripts/generic/scalability_*.*; do
+        if [ "$(num_files_by_mask $mask)" != 0 ]; then
+            for i in $mask; do
+                ln -sf $i .
+            done
+        fi
+    done
 }
 
 function generic_prolog() {
