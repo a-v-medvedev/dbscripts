@@ -32,11 +32,6 @@
 
 function dnb_psubmit() {
     generic_prolog "psubmit" $* || return 0	
-    #    local pkg="psubmit"
-    #environment_check_specific "$pkg" || fatal "pkg: environment check failed"
-    #local m=$(get_field "$1" 2 "=")
-    #local V=$(get_field "$2" 2 "=")
-    #[ "$(check_this_pkg_record $pkg $V $m)" == "cached" ] && { echo ">> dbscripts: package \"$pkg\" cached"; return 0; }
     du_github "a-v-medvedev" "v"
     local FILES=""
     if this_mode_is_set "i"; then
@@ -44,21 +39,13 @@ function dnb_psubmit() {
         FILES=$(ls -1 *.sh)
         cd $DNB_INSTALL_DIR
     fi
-    #    rm -rf "$pkg"-"$V"
     i_direct_copy "$FILES" "remove-before"
     generic_epilog
-    #        i_make_binary_symlink "$pkg" "${V}" "$m"
-    #    i_save_this_pkg_record "$pkg" "${V}" "$m"
     return 0
 }
 
 function dnb_yaml-cpp() {
 	generic_prolog "yaml-cpp" $* || return 0
-	#local pkg="yaml-cpp"
-	#environment_check_specific "$pkg" || fatal "$pkg: environment check failed"
-	#local m=$(get_field "$1" 2 "=")
-	#local V=$(get_field "$2" 2 "=")
-	#[ "$(check_this_pkg_record $pkg $V $m)" == "cached" ] && return 0
     du_github "jbeder" "yaml-cpp-"
     if this_mode_is_set 'u'; then
         sed -i '/target_compile_options(yaml-cpp/,+15d' ${pkg}.src/CMakeLists.txt
@@ -69,16 +56,14 @@ function dnb_yaml-cpp() {
     OPTS="$OPTS -DYAML_CPP_BUILD_TOOLS=OFF"
     OPTS="$OPTS -DYAML_CPP_BUILD_CONTRIB=OFF"
     bi_cmake ".." "$OPTS"
-    generic_epilog
-    #i_make_binary_symlink "$pkg" "${V}" "$m"
     if this_mode_is_set "i"; then
-        if [ -d "$pkg".bin/lib64 ]; then
-            cd "$pkg".bin
+        if [ -d "$pkg"-"$V"/lib64 ]; then
+            cd "$pkg"-"$V"
             [ -e lib ] || ln -sf lib64 lib
             cd $DNB_INSTALL_DIR
         fi
     fi
-    #i_save_this_pkg_record "$pkg" "${V}" "$m"
+    generic_epilog
     return 0
 }
 
