@@ -366,8 +366,8 @@ function bi_make() {
     if this_mode_is_set "b"; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
-        eval "$commands"
-        make -j $DNB_MAKE_PARALLEL_LEVEL $params
+        eval "$commands" || { cd $DNB_INSTALL_DIR; return 1; }
+        make -j $DNB_MAKE_PARALLEL_LEVEL $params || { cd $DNB_INSTALL_DIR; return 1; }
         cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i'; then
