@@ -69,15 +69,24 @@ function dubi_main {
     return 0
 }
 
-function i_patch_single_file() {
+
+function patch_single_file() {
     local filetopatch="$1"
     local ptch="$2"
-    if this_mode_is_set "i"; then
-        if [ -e "$filetopatch" -a -e "$ptch" ]; then
-            echo ">> dbscripts: applying $(basename $ptch) to $filetopatch:"
-            patch --dry-run -s -N -i $ptch $filetopatch && patch -i $ptch $filetopatch || true
-        fi
+    if [ -e "$filetopatch" -a -e "$ptch" ]; then
+        echo ">> dbscripts: applying $(basename $ptch) to $filetopatch:"
+        patch --dry-run -s -N -i $ptch $filetopatch && patch -i $ptch $filetopatch || true
     fi
+    return 0
+}
+
+function u_patch_single_file() {
+    this_mode_is_set "u" && patch_single_file "$1" "$2" 
+    return 0
+}
+
+function i_patch_single_file() {
+    this_mode_is_set "i" && patch_single_file "$1" "$2" 
     return 0
 }
 
