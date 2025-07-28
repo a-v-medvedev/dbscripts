@@ -148,6 +148,15 @@ function generate_psubmit_opt() {
         [ -z "${!varname}" ] || echo $i=\'${!varname}\' >> $filename
     done
     set -u
+    return 0
+}
+
+function i_generate_psubmit_opt() {
+    set +u
+    local suffix=$1
+    set -u
+    this_mode_is_set "i" && generate_psubmit_opt "$pkg-$V" $suffix
+    return 0
 }
 
 function template_to_psubmitopts {
