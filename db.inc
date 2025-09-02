@@ -54,6 +54,7 @@ function dubi_main {
             echo ">> dbscripts: dubi_main: call: dnb_${pkg} mode=$mode version=$version"
             eval dnb_${pkg} mode=$mode version=$version
         fi
+        [ "$pkg" == "clean" ] && { rm -f .saved_pkg_records; return 0; }
         this_mode_is_set "i" "$mode" && was_installed=1
     done
     if [ ! -z "$was_installed" ]; then
@@ -279,6 +280,25 @@ function du_gitclone() {
     return 0
 }
 
+function du_git_embedded() {
+    local subdir="src"
+    set +u
+    [ -z "$1" ] || subdir="$1"
+    set -u
+    if this_mode_is_set d; then
+        if [ "$V" != "CURRENT" ]; then
+            local changes=$(git status -suno)
+            [ -z "$changes" ] || fatal "there are local changes, can't switch code version."
+            git checkout "$V" || fatal "error when checking out the branch or tag: $V."
+        fi
+        [ -d "$subdir" ] || fatal "embedded git option for a project assumes that all project source code is placed in $subdir subdirectory, but it missing for this code version."
+    fi
+    if this_mode_is_set u; then
+        [ -e ${pkg}-${V}.src ] || ln -s "$subdir" ${pkg}-${V}.src
+    fi
+    return 0
+}
+
 function du_svn() { 
     local url="$1"
     mkdir -p "${pkg}.dwn"
@@ -448,7 +468,7 @@ function i_copy_scripts() {
             for i in $mask; do
                 case $i in
                 */scalability_*) ;;   
-                *) ln -sf $i .;;
+                *) ln -rsf $i .;;
                 esac 
             done
         fi
@@ -460,7 +480,7 @@ function i_copy_scal_scripts() {
     for mask in $DNB_INSTALL_DIR/scripts/generic/scalability_*.*; do
         if [ "$(num_files_by_mask $mask)" != 0 ]; then
             for i in $mask; do
-                ln -sf $i .
+                ln -rsf $i .
             done
         fi
     done

@@ -265,6 +265,7 @@ function expand_mode_string {
     local m="$4"
     local final=""
     [ -z "$m" ] && m="$(get_default_build_mode)"
+    [ "$allargs" == "clean" ] && { echo " clean:i"; return 0; }
     [ -z "$allargs" ] && allargs="$m"
     [ ":" != $(get_first_char "$m") ] && fatal "wrong mode string"
     if [ ":" == $(get_first_char "$allargs") ]; then
@@ -276,12 +277,15 @@ function expand_mode_string {
     else
         for a in $allargs; do
             [ ":" == $(get_first_char "$a") ] && fatal "wrong mode string"
+            [ "$a" == "sandbox" ] || beginswith "$a" "sandbox:" && fatal "package name sandbox is forbidden"
+            [ "$a" == "clean" ] || beginswith "$a" "clean:" && fatal "clean can't be combined with anything or be a name of a package"
             is_any_char_present "$a" ":" && final="$final $a" && continue
             final="$final ${a}${m}"
         done
     fi
     [ -z "$deps" ] || final=$(add_deps "$final" "$deps" "$m")
     echo "$final"
+    return 0
 }
 
 function mode_for_pkg {
@@ -294,6 +298,7 @@ function mode_for_pkg {
         fi
     done
     echo ""
+    return 0
 }
 
 function version_for_pkg() {
@@ -301,6 +306,7 @@ function version_for_pkg() {
     local defvers="$2"
     local cfgvers="$3"
     local bld="$4"
+    [ "$pkg" == "clean" ] && { echo "0"; return 0; }
     local defm=$(mode_for_pkg ${pkg} "$defvers")
     local cfgm=$(mode_for_pkg ${pkg} "$cfgvers")
     local cmdm=""

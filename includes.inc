@@ -1,3 +1,4 @@
+DNB_DBSCRIPTSDIR=${DNB_DBSCRIPTSDIR:-"./dbscripts"}
 source $DNB_DBSCRIPTSDIR/base.inc
 source $DNB_DBSCRIPTSDIR/funcs.inc
 source $DNB_DBSCRIPTSDIR/cache.inc

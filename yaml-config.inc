@@ -226,8 +226,7 @@ function remove_temps() {
   return 0
 }
 
-[ -z "$DNB_DBSCRIPTSDIR" ] && DNB_DBSCRIPTSDIR=dbscripts
-[ -z "$DNB_YAML_CONFIG" ] && DNB_YAML_CONFIG=dnb.yaml
+DNB_YAML_CONFIG=${DNB_YAML_CONFIG:-"dnb.yaml"}
 DNB_ORIGINAL_PWD=$PWD
 
 if [ -v DNB_YQ_DOWNLOAD_URL ]; then
