@@ -54,14 +54,9 @@ function verify_compiler_version {
 }
 
 function verify_cuda_version {
-    local comp="$1"
-    local cudaminvers="$2"
-    local vout=$("$1" --version)
-    echo "$vout" | grep -q 'nvcc: NVIDIA (R) Cuda compiler driver' || fatal "can't detect CUDA version"
-    echo "$vout" | grep -q 'Cuda compilation tools, release' || fatal "can't detect CUDA version"
-    export cudavers=$(echo "$vout" | awk 'BEGIN{RS=","} /release/ { print $2 }')
-    version_is_less "$cudavers" "$cudaminvers" && fatal "CUDA version from path $DNB_CUDA_HOME is $cudavers; it is not supported; minimal supported version is ${cudaminvers}.";
-    info ">> dbscripts: Using CUDA path ${DNB_CUDA_HOME}, version: ${cudavers}" 
+    local cudaminvers="$1"
+    version_is_less "$DNB_CUDA_VERSION" "$cudaminvers" && fatal "CUDA version from path $DNB_CUDA_HOME is $DNB_CUDA_VERSION; it is not supported; minimal supported version is ${cudaminvers}.";
+    info ">> dbscripts: Using CUDA path ${DNB_CUDA_HOME}, version: ${DNB_CUDA_VERSION}" 
     return 0
 }
 
@@ -90,6 +85,14 @@ function working_dir_check {
 function verify_if_file_presents_in_cuda_path() {
     local file="$1"
     [ -f "$DNB_CUDA_HOME"/"$file" ] || fatal "can't find $file in CUDA path"
+    return 0
+}
+
+function get_cuda_version() {
+    local file="$1"
+    export DNB_CUDA_VERSION=$("$DNB_CUDA_HOME"/"$file" --version | grep -i 'cuda compilation tools' | awk '{for(i=1;i<=NF;i++)if(match($i,/^[0-9]+\.[0-9]*/)) print $i}' | tr -d ,)
+    [ -z "$DNB_CUDA_VERSION" ] && fatal "can't detect CUDA version assumed by a compiler $(basename $file)"
+    return 0
 }
 
 function cuda_home_dir_set {
@@ -103,17 +106,31 @@ function cuda_home_dir_set {
     fi
     set -u
     verify_if_file_presents_in_cuda_path bin/nvcc
+    get_cuda_version bin/nvcc
     local nvtx=0
+    local nvtx2=0
+    local nvtx3=0
     local cudart=0
-    for i in lib/x86_64-linux-gnu/libnvToolsExt.so lib64/libnvToolsExt.so ../cuda/lib64/libnvToolsExt.so; do
-        [ -f "$DNB_CUDA_HOME"/$i ] && nvtx=$(expr "$nvtx" \+ 1) && export DNB_CUDA_EXT_PATH=$(dirname "$DNB_CUDA_HOME/$i")
+    export DNB_CUDA_EXT_PATH=""
+    set -x
+    for i in lib/x86_64-linux-gnu/libnvToolsExt.so lib64/libnvToolsExt.so ../cuda/lib64/libnvToolsExt.so ../cuda/$DNB_CUDA_VERSION/lib64/libnvToolsExt.so; do
+        [ -f "$DNB_CUDA_HOME"/$i ] && nvtx2=$(($nvtx2 + 1)) && export DNB_CUDA_EXT_PATH=$(dirname "$DNB_CUDA_HOME/$i")
     done
-    for i in lib/x86_64-linux-gnu/libcudart.so lib64/libcudart.so ../cuda/lib64/libcudart.so; do
-        [ -f "$DNB_CUDA_HOME"/$i ] && cudart=$(expr "$cudart" \+ 1) 
+    if [ -z "$DNB_CUDA_EXT_PATH" ]; then
+      for i in lib/x86_64-linux-gnu/libnvToolsExt.so lib64/libnvtx3interop.so ../cuda/lib64/libnvtx3interop.so ../cuda/$DNB_CUDA_VERSION/lib64/libnvtx3interop.so; do
+          [ -f "$DNB_CUDA_HOME"/$i ] && nvtx3=$(($nvtx3 + 1)) && export DNB_CUDA_EXT_PATH=$(dirname "$DNB_CUDA_HOME/$i")
+      done
+    fi
+    for i in lib/x86_64-linux-gnu/libcudart.so lib64/libcudart.so ../cuda/lib64/libcudart.so ../cuda/$DNB_CUDA_VERSION/lib64/libcudart.so; do
+        [ -f "$DNB_CUDA_HOME"/$i ] && cudart=$(($cudart + 1))
     done
-    [ "$nvtx" == "0" -o "$cudart" == "0" ] && fatal "can't find library libcudart.so or libnvToolsExt.so in CUDA path"
-    [ -f "$DNB_CUDA_EXT_PATH/libnvToolsExt.so" ] || fatal "can't find libnvToolsExt.so in CUDA path"
+    nvtx=$(($nvtx2 + $nvtx3))
+    [ "$nvtx" == "0" -o "$cudart" == "0" ] && fatal "can't find library libcudart.so or libnvToolsExt.so/libnvtx3interop.so in CUDA path"
+    [ "$nvtx2" != 0 ] && DNB_CUDA_NVTXLIBNAME="libnvToolsExt.so"
+    [ "$nvtx3" != 0 ] && DNB_CUDA_NVTXLIBNAME="libnvtx3interop.so"
+    [ -f "$DNB_CUDA_EXT_PATH/$DNB_CUDA_NVTXLIBNAME" ] || fatal "can't find $DNB_CUDA_NVTXLIBNAME in CUDA path"
     [ -f "$DNB_CUDA_EXT_PATH/libcudart.so" ] || fatal "can't find libcudart.so in CUDA path"
+    set +x
 }
 
 function set_variable_if_not_defined() {
@@ -172,7 +189,7 @@ function environment_check_cuda {
     cuda_home_dir_set
     local version="$DNB_CUDA_MINIMAL_VERSION"
     [ -z "$DNB_CHECK_CUDA" ] || version="$DNB_CHECK_CUDA" 
-    verify_cuda_version "$DNB_CUDA_HOME/bin/nvcc" "$version" || return 1
+    verify_cuda_version "$version" || return 1
 }
 
 function environment_check_main {
