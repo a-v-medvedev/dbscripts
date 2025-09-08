@@ -112,7 +112,6 @@ function cuda_home_dir_set {
     local nvtx3=0
     local cudart=0
     export DNB_CUDA_EXT_PATH=""
-    set -x
     for i in lib/x86_64-linux-gnu/libnvToolsExt.so lib64/libnvToolsExt.so ../cuda/lib64/libnvToolsExt.so ../cuda/$DNB_CUDA_VERSION/lib64/libnvToolsExt.so; do
         [ -f "$DNB_CUDA_HOME"/$i ] && nvtx2=$(($nvtx2 + 1)) && export DNB_CUDA_EXT_PATH=$(dirname "$DNB_CUDA_HOME/$i")
     done
@@ -130,7 +129,6 @@ function cuda_home_dir_set {
     [ "$nvtx3" != 0 ] && DNB_CUDA_NVTXLIBNAME="libnvtx3interop.so"
     [ -f "$DNB_CUDA_EXT_PATH/$DNB_CUDA_NVTXLIBNAME" ] || fatal "can't find $DNB_CUDA_NVTXLIBNAME in CUDA path"
     [ -f "$DNB_CUDA_EXT_PATH/libcudart.so" ] || fatal "can't find libcudart.so in CUDA path"
-    set +x
 }
 
 function set_variable_if_not_defined() {
