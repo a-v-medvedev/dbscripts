@@ -331,3 +331,12 @@ function check_bash_func_declared() {
     return 0
 }
 
+function here-document() {
+    local file="$1"
+    local dir=$(dirname $file)
+    if [ "$dir" != "." -a "$dir" != ".." ]; then
+        [ -e "$dir" ] || mkdir -p "$dir"
+    fi
+    cat | sed 's/^[ \t]*//' > $file
+}
+

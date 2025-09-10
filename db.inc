@@ -170,8 +170,12 @@ function github_get_latest_version_tag() {
 
 function du_github {
     local addr="$1"
+    set +u
     local pfx="$2"
+    local project="$3"
+    set -u
     [ -z "$m" ] && return
+    [ -z "$project" ] && project="${pkg}"
     local archive=${pkg}.dwn/${pkg}-${V}.tar.gz
     if this_mode_is_set 'd'; then
         [ -e "$archive" ] && rm -rf "$archive"
@@ -182,9 +186,9 @@ function du_github {
         if [ "${XV}" == "HEAD" ]; then
             local branch=master
             [ $(get_nfields "$V" "^") == "2" ] && branch=$(get_field "${V}" "2" "^")
-            url="https://github.com/${addr}/${pkg}/archive/${branch}.tar.gz"
+            url="https://github.com/${addr}/${project}/archive/${branch}.tar.gz"
         else
-            url="https://github.com/${addr}/${pkg}/archive/${pfx}${V}.tar.gz"
+            url="https://github.com/${addr}/${project}/archive/${pfx}${V}.tar.gz"
         fi
         wget -nv -O "$archive" "$url"
     fi
