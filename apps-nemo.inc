@@ -64,29 +64,6 @@ function set_path_variable_if_missing() {
     fi
 }
 
-function dvc_checkout() {
-    local dir=$1  
-    local branch=$2 
-    [ -e "$dir/scripts" -a -e "$dir/data" ] && return
-    mkdir -p $dir/scripts
-    cd $dir/scripts
-    eval $NEMO_DVC_INIT
-    git clone -b $branch https://earth.bsc.es/gitlab/kkeller/dvc-cache-de340.git
-    cd dvc-cache-de340
-    $NEMO_DVC_CMD config --project cache.dir $NEMO_DVC_CACHE_DIR
-    $NEMO_DVC_CMD checkout
-    cd scripts/
-    chmod +x ./create_experiment.sh
-    EXPID=00 ./create_experiment.sh
-    cd ../../..
-    ln -s scripts/dvc-cache-de340/scripts/exp-00 data
-    sed -i 's/nn_stock =.*/nn_stock = -1/' data/namelist_cfg
-    sed -i 's/nn_stocklist =.*/nn_stocklist = -9999/' data/namelist_cfg
-    sed -i 's/ln_timing =.*$/&\nln_timing_detail = .true.\nsn_cfctl%l_runstat = .true./' data/namelist_cfg
-    sed -i 's!\(<variable id="info_level".*>\).*</variable>!\1-2</variable>!' data/iodef.xml
-    cd ..
-}
-
 function dnb_psyclone() {
     generic_prolog "psyclone" $* || return 0
     local psyclone_script="share/psyclone/examples/nemo/scripts/insert_loop_parallelism.py"
@@ -300,7 +277,6 @@ function dnb_nemo() {
         set_path_variable_if_missing NEMO HDF5 "$DNB_INSTALL_DIR/hdf5.bin"
         set_path_variable_if_missing NEMO NETCDF_C "$DNB_INSTALL_DIR/netcdf-c.bin"
         set_path_variable_if_missing NEMO NETCDF_FORTRAN "$DNB_INSTALL_DIR/netcdf-fortran.bin"
-        set_path_variable_if_missing NEMO XIOS "$DNB_INSTALL_DIR/xios.bin"
         fail_if_variable_not_defined NEMO_CPP NEMO_CC NEMO_FC NEMO_FCFLAGS NEMO_LDFLAGS NEMO_FPPFLAGS
         set -u
 
@@ -352,8 +328,10 @@ function dnb_nemo() {
         here-document arch/arch-dnb.fcm <<________EOF
             %NCDF_INC            -I$NEMO_NETCDF_FORTRAN_PATH/include
             %NCDF_LIB            -L$NEMO_NETCDF_FORTRAN_PATH/lib -L$NEMO_NETCDF_C_PATH/lib -L$NEMO_HDF5_PATH/lib -lhdf5 -lhdf5_hl -lnetcdf -lnetcdff
-            %XIOS_INC            -I$NEMO_XIOS_PATH/inc
-            %XIOS_LIB            $NEMO_XIOS_PATH/lib/libxios.a
+            #%XIOS_INC            -I__NEMO_XIOS_PATH/inc
+            #%XIOS_LIB            __NEMO_XIOS_PATH/lib/libxios.a
+            %XIOS_INC
+            %XIOS_LIB
             %CPP                 $NEMO_CPP
             %CC                  $NEMO_CC
             %FC                  $NEMO_FC
