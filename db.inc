@@ -74,10 +74,18 @@ function dubi_main {
 function patch_single_file() {
     local filetopatch="$1"
     local ptch="$2"
+    local oldpwd=""
     if [ -e "$filetopatch" -a -e "$ptch" ]; then
         echo ">> dbscripts: applying $(basename $ptch) to $filetopatch:"
+        if [ -d "$filetopatch" ]; then
+            oldpwd=$PWD
+            cd "$filetopatch"
+            filetopatch=""
+            beginswith "$ptch" "/" || ptch=$oldpwd/$ptch
+        fi
         patch --dry-run -s -N -i $ptch $filetopatch && patch -i $ptch $filetopatch || true
     fi
+    [ -z "$oldpwd" ] || cd $oldpwd
     return 0
 }
 

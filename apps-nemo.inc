@@ -30,14 +30,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-function here-document() {
-    local file="$1"
-    local dir=$(dirname $file)
-    if [ "$dir" != "." -a "$dir" != ".." ]; then 
-        [ -e "$dir" ] || mkdir -p "$dir"
-    fi
-    cat | sed 's/^[ \t]*//' > $file
-}
 
 function mkdatalink() {
     local dir="$1"
@@ -365,15 +357,33 @@ ________EOF
             mkdir -p "$pkg-$V/conf.ORCA2-generic"
             cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/* "$pkg-$V/conf.ORCA2-generic"
             rm "$pkg-$V/conf.ORCA2-generic/nemo"
+            if [ ! -z "$NEMO_WORKLOAD_ARCHIVE" ]; then
+                if [ -f $pkg.dwn/$NEMO_WORKLOAD_ARCHIVE ]; then
+                    local confdir="$pkg-$V/conf.ORCA2-generic"
+                    local tarkeys="" 
+                    case $NEMO_WORKLOAD_ARCHIVE in
+                    *.tar) tarkeys="xf";;
+                    *.tar.gz) tarkeys="xzf";;
+                    esac
+                    tar $tarkeys $pkg.dwn/$NEMO_WORKLOAD_ARCHIVE -C "$confdir"
+                    for i in $(find "$confdir" -type f); do [ $(dirname $i) == "$confdir" ] || cp $i "$confdir"; done 
+                    if beginswith "$NEMO_CODEBASE" "COMMUNITY_5"; then
+                        patch_single_file "$confdir" $DNB_INSTALL_DIR/patches_5.0/__patch_nemo-5.0_orca2.diff
+                    fi
+                    if [ ! -e "$HOME/data/ORCA2-generic" ]; then
+                        echo "Making a copy of generic workload for NEMO: mkdir $HOME/data/ORCA2-generic"
+                        mkdir -p "$HOME/data/ORCA2-generic"
+                        mkdir -p "$HOME/data/ORCA2-generic/data" "$HOME/data/ORCA2-generic/scripts"
+                        cp -v $confdir/* "$HOME/data/ORCA2-generic/data"
+                    fi
+                fi
+            fi
         fi
-        set +u
         if beginswith "$NEMO_CODEBASE" "COMMUNITY"; then
             export NEMO_AVAILABLE_WORKLOADS=${NEMO_AVAILABLE_WORKLOADS:=ORCA2-generic}
         fi
-        set -u
         cd $DNB_INSTALL_DIR
     fi
     generic_epilog
 }
-
 
