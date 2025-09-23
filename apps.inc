@@ -199,17 +199,14 @@ function dnb_scotch() {
 }
 
 function dnb_hdf5() {
-	#local pkg="hdf5"
-	#environment_check_specific "$pkg" || fatal "${pkg}: environment check failed"
-	#local m=$(get_field "$1" 2 "=")
-	#local V=$(get_field "$2" 2 "=")
     generic_prolog "hdf5" $* || return 0
     du_direct_download https://support.hdfgroup.org/ftp/HDF5/releases/${pkg}-${V%.*}/${pkg}-${V}/src/${pkg}-${V}.tar.gz "${pkg}-${V}.tar.gz" 
-    local COMMANDS=""
-    local OPTS="--enable-shared --disable-static --disable-fortran"
-    bi_autoconf_make "$COMMANDS" "$OPTS"
+    local fortran_flag="--disable-fortran"
+    is_set_to_true DNB_HDF5_ENABLE_FORTRAN && fortran_flag="--enable-fortran" 
+    local COMMANDS="export H5_FCFLAGS=-fPIC"
+    local OPTS="--enable-shared --disable-static $fortran_flag"
+    bi_autoconf_make "$COMMANDS" "$OPTS" || fatal "hdf5: build failed."
     generic_epilog
-    #i_make_binary_symlink "$pkg" "${V}" "$m"
     return 0
 }
 

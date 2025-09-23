@@ -346,6 +346,8 @@ function bi_cmake() {
     local opts="$2"
     set +u 
     local commands="$3"
+    local make_opts="$4"
+    local make_install_opts="$5"
     set -u
     [ -z "$m" ] && return
     local cmake_binary=cmake
@@ -356,10 +358,12 @@ function bi_cmake() {
         [ -e build ] && rm -rf build
         mkdir -p build
         cd build
-        $cmake_binary $opts -DCMAKE_INSTALL_PREFIX=$DNB_INSTALL_DIR/${pkg}-${V} $cmpath
-        [ ! -z "$commands" ] && eval "$commands"
-        make clean
-        make -j${DNB_MAKE_PARALLEL_LEVEL}
+        (
+            $cmake_binary $opts -DCMAKE_INSTALL_PREFIX=$DNB_INSTALL_DIR/${pkg}-${V} $cmpath
+            [ -z "$commands" ] || eval "$commands" || return 1
+            make clean || return 1
+            make -j${DNB_MAKE_PARALLEL_LEVEL} $make_opts || return 1
+        ) || { cd $DNB_INSTALL_DIR; return 1; }
         cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i'; then
@@ -367,32 +371,43 @@ function bi_cmake() {
         cd ${pkg}-${V}.src
         [ ! -e build ] && fatal "${pkg}: no build directory in source tree"
         cd build
-        [ ! -z "$commands" ] && eval "$commands"
-        make install
+        (
+            [ -z "$commands" ] || eval "$commands" || return 1
+            make install $make_install_opts || return 1
+        ) || { cd $DNB_INSTALL_DIR; return 1; }
         cd $DNB_INSTALL_DIR
     fi
     return 0
 }
 
+OB
 function bi_autoconf_make() {
+    set +u
     local commands="$1"
     local opts="$2"
+    local make_opts="$3"
+    local make_install_opts="$4"
+    set -u
     if this_mode_is_set 'b'; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
-        [ ! -z "$commands" ] && eval "$commands"
-        set -x
-        ./configure $opts --prefix=$DNB_INSTALL_DIR/${pkg}-${V}
-        set +x
-        make clean
-        make -j $DNB_MAKE_PARALLEL_LEVEL
+        (
+            [ -z "$commands" ] || eval "$commands" || return 1
+            set -x
+            ./configure $opts --prefix=$DNB_INSTALL_DIR/${pkg}-${V} || return 1
+            set +x
+            make clean || return 1
+            make -j $DNB_MAKE_PARALLEL_LEVEL $make_opts || return 1
+        ) || { cd $DNB_INSTALL_DIR; return 1; }
         cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i'; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to install from"
         cd ${pkg}-${V}.src
-        [ ! -z "$commands" ] && eval "$commands"
-        make install
+        ( 
+            [ -z "$commands" ] || eval "$commands" || return 1
+            make install $make_install_opts || return 1
+        ) || { cd $DNB_INSTALL_DIR; return 1; }
         cd $DNB_INSTALL_DIR
     fi
     return 0
@@ -407,8 +422,10 @@ function bi_make() {
     if this_mode_is_set "b"; then
         [ ! -e ${pkg}-${V}.src ] && fatal "${pkg}: no source directory to build"
         cd ${pkg}-${V}.src
-        eval "$commands" || { cd $DNB_INSTALL_DIR; return 1; }
-        make -j $DNB_MAKE_PARALLEL_LEVEL $params || { cd $DNB_INSTALL_DIR; return 1; }
+        (
+            eval "$commands" || return 1 
+            make -j $DNB_MAKE_PARALLEL_LEVEL $params || return 1 
+        ) || { cd $DNB_INSTALL_DIR; return 1; }
         cd $DNB_INSTALL_DIR
     fi
     if this_mode_is_set 'i'; then
