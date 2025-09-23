@@ -380,7 +380,7 @@ function bi_cmake() {
     return 0
 }
 
-OB
+
 function bi_autoconf_make() {
     set +u
     local commands="$1"
