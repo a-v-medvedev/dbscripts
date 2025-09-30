@@ -354,12 +354,12 @@ ________EOF
         mkdir -p "$pkg-$V"
         cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/nemo "$pkg-$V"
         if beginswith "$NEMO_CODEBASE" "COMMUNITY"; then
-            mkdir -p "$pkg-$V/conf.ORCA2-generic"
-            cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/* "$pkg-$V/conf.ORCA2-generic"
-            rm "$pkg-$V/conf.ORCA2-generic/nemo"
+            mkdir -p "$pkg-$V/_conf.ORCA2-generic"
+            cp -v $pkg-$V.src/cfgs/$NEMO_CFG/EXP00/* "$pkg-$V/_conf.ORCA2-generic"
+            rm "$pkg-$V/_conf.ORCA2-generic/nemo"
             if [ ! -z "$NEMO_WORKLOAD_ARCHIVE" ]; then
                 if [ -f $pkg.dwn/$NEMO_WORKLOAD_ARCHIVE ]; then
-                    local confdir="$pkg-$V/conf.ORCA2-generic"
+                    local confdir="$pkg-$V/_conf.ORCA2-generic"
                     local tarkeys="" 
                     case $NEMO_WORKLOAD_ARCHIVE in
                     *.tar) tarkeys="xf";;
