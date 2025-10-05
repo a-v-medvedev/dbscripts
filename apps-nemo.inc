@@ -191,7 +191,9 @@ function dnb_nemo() {
     if beginswith "$NEMO_CODEBASE" "COMMUNITY"; then
         # Use open source repositories:    
         if beginswith "$V" "4.0"; then
-            du_svn "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V"
+            # NOTE this svn repository became disfunctional some time ago:
+            #du_svn "https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r$V"
+            du_github "a-v-medvedev" "" "nemo"
         elif beginswith "$V" "4.2"; then
             true  
             # TODO: add something working for 4.2 from github
