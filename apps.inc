@@ -317,13 +317,16 @@ function dnb_netcdf-fortran() {
     generic_prolog "netcdf-fortran" $* || return 0
     du_github "Unidata" "v"
     local DNB_NETCDF_FORTRAN_NETCDF_C_PATH=${DNB_NETCDF_FORTRAN_NETCDF_C_PATH:-$DNB_INSTALL_DIR/netcdf-c.bin}
-    local CMDS=""
+    local fcflags="-fPIC"
+    # NOTE: for newest gfortran versions: DNB_NETCDF_FORTRAN_FCFLAGS=-fallow-argument-mismatch"
+    # NOTE: for newest Cray Fortran versions: DNB_NETCDF_FORTRAN_FCFLAGS=-ef"
+    [ -v DNB_NETCDF_FORTRAN_FCFLAGS ] && fcflags="$fcflags ${DNB_NETCDF_FORTRAN_FCFLAGS}"
+    local CMDS="export FCFLAGS=\"$fcflags\""
     local OPTS=""
-    OPTS="$OPTS FCFLAGS=-fPIC CFLAGS=-fPIC" 
+    OPTS="$OPTS CFLAGS=-fPIC" 
     OPTS="$OPTS CPPFLAGS=-I$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/include"
-    OPTS="$OPTS -Wl,-L,$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/lib,-rpath,$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/lib"
+    OPTS="$OPTS LDFLAGS=-Wl,-L,$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/lib,-rpath,$DNB_NETCDF_FORTRAN_NETCDF_C_PATH/lib"
     [ -v DNB_NETCDF_FORTRAN_FC ] && OPTS="$OPTS FC=$DNB_NETCDF_FORTRAN_FC"
-    # NOTE: for newest gfortran versions: OPTS="$OPTS FCFLAGS+=${SPACE}-fallow-argument-mismatch"
     bi_autoconf_make "$CMDS" "$OPTS"
     generic_epilog
 }
