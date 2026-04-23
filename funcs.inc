@@ -340,3 +340,13 @@ function here-document() {
     cat | sed 's/^[ \t]*//' > $file
 }
 
+function debug_prints_on() {
+    echo $- | grep -q x && _omit_setx=true || { _oldPS4=$PS4; PS4=""; set -x; }
+}
+
+function debug_prints_off_() {
+    { [ -v _omit_setx && ! -z "$_omit_setx" ] || { set +x; PS4=$_oldPS4; }; } 2>/dev/null
+}
+
+alias debug_prints_off="{ debug_prints_off_; } 2>/dev/null"
+shopt -s expand_aliases

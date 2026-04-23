@@ -83,10 +83,14 @@ function parse_cfg_yaml() {
   nlines=$(cat $yaml | ${DNB_YQ} '.environment | length')
   if [ "$nlines" != 0 ]; then
     for i in $(seq 0 1 $(expr $nlines - 1)); do 
-      local line=$(cat $yaml | ${DNB_YQ} ".environment[$i]")
-      [ "$line" == "null" ] && continue
-      echo $line
-      eval $line
+      local script_file_name=$PWD/$(mktemp .dnb.env.XXXXXXXX)
+      local envfile=""
+      cat $yaml | ${DNB_YQ} ".environment[$i]" > "$script_file_name"
+      [ "$(cat $script_file_name)" != "" -a "$(cat $script_file_name)" != "null" ] && envfile=$script_file_name
+      if [ ! -z "$envfile" ]; then
+          [ "$(wc -l < $envfile)" == 1 ] && cat $envfile
+          source $envfile
+      fi 
     done
   fi
 
@@ -219,10 +223,10 @@ function parse_specific_yamls() {
 function remove_temps() {
   if [ -v DNB_INSTALL_DIR ]; then
     cd $DNB_INSTALL_DIR
-    rm -f .dnb.script.*
+    rm -f .dnb.script.* .dnb.env.*
   fi
   cd $DNB_ORIGINAL_PWD
-  rm -f .dnb.script.*
+  rm -f .dnb.script.* .dnb.env.*
   return 0
 }
 
