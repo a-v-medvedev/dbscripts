@@ -203,8 +203,10 @@ function dnb_hdf5() {
     du_direct_download https://support.hdfgroup.org/ftp/HDF5/releases/${pkg}-${V%.*}/${pkg}-${V}/src/${pkg}-${V}.tar.gz "${pkg}-${V}.tar.gz" 
     local fortran_flag="--disable-fortran"
     is_set_to_true DNB_HDF5_ENABLE_FORTRAN && fortran_flag="--enable-fortran" 
+    local parallel_flag="--disable-parallel"
+    is_set_to_true DNB_HDF5_ENABLE_PARALLEL && parallel_flag="--enable-parallel"
     local COMMANDS="export H5_FCFLAGS=-fPIC"
-    local OPTS="--enable-shared --disable-static $fortran_flag"
+    local OPTS="--enable-shared --disable-static $fortran_flag $parallel_flag"
     bi_autoconf_make "$COMMANDS" "$OPTS" || fatal "hdf5: build failed."
     generic_epilog
     return 0
