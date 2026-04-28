@@ -50,12 +50,12 @@ function dubi_main {
         local pkg=$(get_field "$pkgver" 1) 
         local mode=$(mode_for_pkg ${pkg} "$what_to_build")
         local version=$(version_for_pkg ${pkg} "${DNB_VERSIONS}" "${override_versions}" "${what_to_build}")
+        [ "$pkg" == "clean" ] && { rm -f .saved_pkg_records; return 0; }
+        this_mode_is_set "i" "$mode" && was_installed=1
         if [ ! -z "$mode" ]; then
             echo ">> dbscripts: dubi_main: call: dnb_${pkg} mode=$mode version=$version"
             eval dnb_${pkg} mode=$mode version=$version
         fi
-        [ "$pkg" == "clean" ] && { rm -f .saved_pkg_records; return 0; }
-        this_mode_is_set "i" "$mode" && was_installed=1
     done
     if [ ! -z "$was_installed" ]; then
         check_bash_func_declared dnb_sandbox && echo ">> dbscripts: dubi_main: call: dnb_sandbox" && m=i && dnb_sandbox
