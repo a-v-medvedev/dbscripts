@@ -48,9 +48,9 @@ function i_cache_save_this_pkg_record() {
 function cache_check_this_pkg_record() {
     local pkg="$1"
     local V="$2"
+    set +u
     local m="$3"
     [ -z "$m" ] && return 0
-    set +u
     [ -z "$DNB_SUPERIOR" ] && return 0
     set -u
     [ -e "$DNB_SUPERIOR/.saved_pkg_records" ] || return 0

@@ -487,6 +487,8 @@ function i_mksandbox() {
         [ "$DNB_SANDBOX_SUBDIR" == "." ] || mkdir -p "$DNB_SANDBOX_SUBDIR" && cd "$DNB_SANDBOX_SUBDIR"
     fi
     export DNB_SANDBOX=$PWD
+    local short_sandbox_dir=$(echo "$DNB_SANDBOX" | sed "s!$DNB_INSTALL_DIR/!!")
+    echo ">> dbscripts: sandbox dir is: $short_sandbox_dir"
     cd $DNB_INSTALL_DIR
 }
 
