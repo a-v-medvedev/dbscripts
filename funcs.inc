@@ -342,7 +342,6 @@ function here-document() {
 
 function debug_prints_on() {
     echo $- | grep -q x && _omit_setx=true || { _oldPS4=$PS4; PS4=""; set -x; }
-    true
 }
 
 function debug_prints_off_() {
@@ -351,7 +350,6 @@ function debug_prints_off_() {
       if [ -v _omit_setx ]; then [ "$_omit_setx" == "true" ] && reset=""; fi
       [ -z "$reset" ] || { set +x; PS4=$_oldPS4; }; 
     } 2>/dev/null
-    true
 }
 
 alias debug_prints_off="{ debug_prints_off_; } 2>/dev/null"
