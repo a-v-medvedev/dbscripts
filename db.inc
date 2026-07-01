@@ -181,6 +181,7 @@ function du_github {
     set +u
     local pfx="$2"
     local project="$3"
+    local token="$4"
     set -u
     [ -z "$m" ] && return
     [ -z "$project" ] && project="${pkg}"
@@ -198,7 +199,9 @@ function du_github {
         else
             url="https://github.com/${addr}/${project}/archive/${pfx}${V}.tar.gz"
         fi
-        wget -nv -O "$archive" "$url"
+        local auth=""
+        [ -z "$token" ] || auth="--header=Authorization: Bearer $token"
+        wget "$auth" -nv -O "$archive" "$url"
     fi
     if this_mode_is_set 'u'; then
         [ -e "$archive" ] || fatal "${pkg}: no downloaded archive file: $archive"
