@@ -270,28 +270,44 @@ function du_gitclone() {
     set +u
     local flags="$2"
     local branch="$3"
+    local dir="$4"
     set -u
+    ## [ -z "$dir" ] && dir="." 
     if this_mode_is_set 'd'; then
-       [ -e "$pkg"-"$V".src ] && rm -rf "$pkg"-"$V".src
-       mkdir -p "$pkg"-"$V".src
-       cd "$pkg"-"$V".src
+       if [ -z "$dir" ]; then  
+           [ -e "$pkg"-"$V".src ] && rm -rf "$pkg"-"$V".src
+           mkdir -p "$pkg"-"$V".src
+           cd "$pkg"-"$V".src
+       else
+           if [ -e "$dir" ]; then
+              local given=$(readlink -f "$dir")
+              local curr=$(readlink -f .)
+              [ "$given" == "$curr" ] && fatal "du_gitclone wrong directory name given"
+              case "$curr" in 
+                  "$given/"*) fatal "du_gitclone wrong directory name given"
+              esac 
+              rm -rf "$dir"
+           fi
+       fi 
        if [ -z "$branch" ]; then
-         branch="$V"
-         local XVER=$(get_field "${V}" "1" "^")
-         if [ "${XVER}" == "HEAD" ]; then
-             branch="master"
-             [ $(get_nfields "${V}" "^") == "2" ] && branch=$(get_field "${V}" "2" "^")
-         fi
+           branch="$V"
+           local XVER=$(get_field "${V}" "1" "^")
+           if [ "${XVER}" == "HEAD" ]; then
+               branch="master"
+               [ $(get_nfields "${V}" "^") == "2" ] && branch=$(get_field "${V}" "2" "^")
+           fi
        fi
        local recursive=""
        [ "$flags" == "recursive" ] && recursive="--recursive"
-       git clone --depth 1 --single-branch --branch "$branch" $recursive "${addr}" .
+       git clone --depth 1 --single-branch --branch "$branch" $recursive "${addr}" "${dir:-.}" || fatal "git clone failed."
        cd ..
     fi
     if this_mode_is_set 'u'; then
-        [ -e "$pkg"-"$V".src ] || fatal "${pkg}-${V}.src directory not found, must be downloaded first."
+        if [ -z "$dir" ]; then
+            [ -e "$pkg"-"$V".src ] || fatal "${pkg}-${V}.src directory not found, must be downloaded first."
+        fi
     fi
-    u_make_source_symlink
+    [ -z "$dir" ] && u_make_source_symlink
     return 0
 }
 
