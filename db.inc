@@ -300,7 +300,7 @@ function du_gitclone() {
        local recursive=""
        [ "$flags" == "recursive" ] && recursive="--recursive"
        git clone --depth 1 --single-branch --branch "$branch" $recursive "${addr}" "${dir:-.}" || fatal "git clone failed."
-       cd ..
+       [ -z "$dir" ] && cd ..
     fi
     if this_mode_is_set 'u'; then
         if [ -z "$dir" ]; then
