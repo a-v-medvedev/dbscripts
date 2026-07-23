@@ -201,7 +201,11 @@ function du_github {
         fi
         local auth=""
         [ -z "$token" ] || auth="--header=Authorization: Bearer $token"
-        wget "$auth" -nv -O "$archive" "$url"
+        if [ -z "$auth" ]; then
+            wget -nv -O "$archive" "$url"
+        else
+            wget "$auth" -nv -O "$archive" "$url"
+        fi 
     fi
     if this_mode_is_set 'u'; then
         [ -e "$archive" ] || fatal "${pkg}: no downloaded archive file: $archive"
