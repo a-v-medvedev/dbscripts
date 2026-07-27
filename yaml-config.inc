@@ -130,6 +130,7 @@ function parse_cfg_yaml() {
 
   update_setting $yaml psubmit queue_suffix PSUBMIT_OPT_QUEUE_SUFFIX
   update_setting $yaml psubmit constraint PSUBMIT_OPT_CONSTRAINT
+  update_setting $yaml psubmit reservation PSUBMIT_OPT_RESERVATION
   update_setting $yaml psubmit whitelist PSUBMIT_OPT_WHITELIST
   update_setting $yaml psubmit blacklist PSUBMIT_OPT_BLACKLIST
   update_setting $yaml psubmit comment PSUBMIT_OPT_COMMENT
@@ -265,6 +266,7 @@ unset PSUBMIT_OPT_QUEUE
 
 unset PSUBMIT_OPT_QUEUE_SUFFIX
 unset PSUBMIT_OPT_CONSTRAINT
+unset PSUBMIT_OPT_RESERVATION
 unset PSUBMIT_OPT_WHITELIST
 unset PSUBMIT_OPT_BLACKLIST
 unset PSUBMIT_OPT_COMMENT
