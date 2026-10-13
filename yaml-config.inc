@@ -32,6 +32,40 @@ function update_setting() {
   return 0
 }
 
+function update_psubmit_settings() {
+  local yaml="$1"
+  local group="$2"
+  group=$(sed 's/^\.//' <<< $group)
+  update_setting $yaml $group nnodes PSUBMIT_OPT_NNODES
+  update_setting $yaml $group ppn PSUBMIT_OPT_PPN
+  update_setting $yaml $group nth PSUBMIT_OPT_NTH
+  update_setting $yaml $group ngpus PSUBMIT_OPT_NGPUS
+  update_setting $yaml $group queue_name PSUBMIT_OPT_QUEUE
+
+  update_setting $yaml $group queue_suffix PSUBMIT_OPT_QUEUE_SUFFIX
+  update_setting $yaml $group constraint PSUBMIT_OPT_CONSTRAINT
+  update_setting $yaml $group reservation PSUBMIT_OPT_RESERVATION
+  update_setting $yaml $group whitelist PSUBMIT_OPT_WHITELIST
+  update_setting $yaml $group blacklist PSUBMIT_OPT_BLACKLIST
+  update_setting $yaml $group comment PSUBMIT_OPT_COMMENT
+  update_setting $yaml $group before PSUBMIT_OPT_BEFORE
+  update_setting $yaml $group after PSUBMIT_OPT_AFTER
+  update_setting $yaml $group target_bin PSUBMIT_OPT_TARGET_BIN
+  update_setting $yaml $group job_name PSUBMIT_OPT_JOB_NAME
+
+  update_setting $yaml $group account PSUBMIT_OPT_ACCOUNT
+  update_setting $yaml $group reservation PSUBMIT_OPT_RESERVATION
+  update_setting $yaml $group time_limit PSUBMIT_OPT_TIME_LIMIT
+  update_setting $yaml $group node_type PSUBMIT_OPT_NODETYPE
+  update_setting $yaml $group resource_handling PSUBMIT_OPT_RESOURCE_HANDLING
+  update_setting $yaml $group generic_resources PSUBMIT_OPT_GENERIC_RESOURCES
+
+  update_setting $yaml $group init_commands PSUBMIT_OPT_INIT_COMMANDS
+  update_setting $yaml $group injob_init_commands PSUBMIT_OPT_INJOB_INIT_COMMANDS
+  update_setting $yaml $group mpi_script PSUBMIT_OPT_MPIEXEC
+  update_setting $yaml $group batch_script PSUBMIT_OPT_BATCH
+}
+
 function parse_cfg_yaml() {
   local yaml=$1
   yq_check "$yaml"
@@ -122,34 +156,7 @@ function parse_cfg_yaml() {
   update_setting $yaml settings parallel_level DNB_MAKE_PARALLEL_LEVEL
   update_setting $yaml settings default_mode DNB_DEFAULT_BUILD_MODE
 
-  update_setting $yaml psubmit nnodes PSUBMIT_OPT_NNODES
-  update_setting $yaml psubmit ppn PSUBMIT_OPT_PPN
-  update_setting $yaml psubmit nth PSUBMIT_OPT_NTH
-  update_setting $yaml psubmit ngpus PSUBMIT_OPT_NGPUS
-  update_setting $yaml psubmit queue_name PSUBMIT_OPT_QUEUE
-
-  update_setting $yaml psubmit queue_suffix PSUBMIT_OPT_QUEUE_SUFFIX
-  update_setting $yaml psubmit constraint PSUBMIT_OPT_CONSTRAINT
-  update_setting $yaml psubmit reservation PSUBMIT_OPT_RESERVATION
-  update_setting $yaml psubmit whitelist PSUBMIT_OPT_WHITELIST
-  update_setting $yaml psubmit blacklist PSUBMIT_OPT_BLACKLIST
-  update_setting $yaml psubmit comment PSUBMIT_OPT_COMMENT
-  update_setting $yaml psubmit before PSUBMIT_OPT_BEFORE
-  update_setting $yaml psubmit after PSUBMIT_OPT_AFTER
-  update_setting $yaml psubmit target_bin PSUBMIT_OPT_TARGET_BIN
-  update_setting $yaml psubmit job_name PSUBMIT_OPT_JOB_NAME
-
-  update_setting $yaml psubmit account PSUBMIT_OPT_ACCOUNT
-  update_setting $yaml psubmit reservation PSUBMIT_OPT_RESERVATION
-  update_setting $yaml psubmit time_limit PSUBMIT_OPT_TIME_LIMIT
-  update_setting $yaml psubmit node_type PSUBMIT_OPT_NODETYPE
-  update_setting $yaml psubmit resource_handling PSUBMIT_OPT_RESOURCE_HANDLING
-  update_setting $yaml psubmit generic_resources PSUBMIT_OPT_GENERIC_RESOURCES
-
-  update_setting $yaml psubmit init_commands PSUBMIT_OPT_INIT_COMMANDS
-  update_setting $yaml psubmit injob_init_commands PSUBMIT_OPT_INJOB_INIT_COMMANDS
-  update_setting $yaml psubmit mpi_script PSUBMIT_OPT_MPIEXEC
-  update_setting $yaml psubmit batch_script PSUBMIT_OPT_BATCH
+  update_psubmit_settings "$yaml" "psubmit"
 
   if [ "$(cat $yaml | ${DNB_YQ} '.per-package')" != "null" ]; then
     local pkgs=$(cat $yaml | ${DNB_YQ} '.per-package | keys | .[]')
