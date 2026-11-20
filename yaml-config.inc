@@ -64,6 +64,10 @@ function update_psubmit_settings() {
   update_setting $yaml $group injob_init_commands PSUBMIT_OPT_INJOB_INIT_COMMANDS
   update_setting $yaml $group mpi_script PSUBMIT_OPT_MPIEXEC
   update_setting $yaml $group batch_script PSUBMIT_OPT_BATCH
+
+  update_setting $yaml $group mpi_options PSUBMIT_OPT_MPIOPTS
+  update_setting $yaml $group mpi_extra PSUBMIT_OPT_MPIEXTRA
+  update_setting $yaml $group batch_extra PSUBMIT_OPT_BATCHEXTRA
 }
 
 function parse_cfg_yaml() {
@@ -293,6 +297,9 @@ unset PSUBMIT_OPT_INIT_COMMANDS
 unset PSUBMIT_OPT_INJOB_INIT_COMMANDS
 unset PSUBMIT_OPT_MPIEXEC
 unset PSUBMIT_OPT_BATCH
+unset PSUBMIT_OPT_MPIOPTS
+unset PSUBMIT_OPT_MPIEXTRA
+unset PSUBMIT_OPT_BATCHEXTRA
 
 [ -f "$DNB_YAML_CONFIG" ] || fatal "can't open main config: $DNB_YAML_CONFIG"
 exec_preamble_yaml "$DNB_YAML_CONFIG"

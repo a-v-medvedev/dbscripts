@@ -143,7 +143,7 @@ function generate_psubmit_opt() {
     local filename=$dir/psubmit.opt
     [ -z "$suffix" ] || filename=$dir/psubmit_$suffix.opt
     echo -n > $filename
-    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT RESERVATION COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME; do
+    for i in QUEUE QUEUE_SUFFIX NODETYPE RESOURCE_HANDLING GENERIC_RESOURCES CONSTRAINT PPN NTH NGPUS INIT_COMMANDS INJOB_INIT_COMMANDS MPIEXEC BATCH WHITELIST BLACKLIST ACCOUNT RESERVATION COMMENT BEFORE AFTER TIME_LIMIT TARGET_BIN JOB_NAME MPIOPTS MPIEXTRA BATCHEXTRA; do
         local varname=PSUBMIT_OPT_$i
         [ -z "${!varname}" ] || echo $i=\'${!varname}\' >> $filename
     done
@@ -187,6 +187,9 @@ function template_to_psubmitopts {
     repl=$(echo "${repl}" $(construct_replacement_command "__TIME_LIMIT__" "$PSUBMIT_OPTS_TIME_LIMIT"))
     repl=$(echo "${repl}" $(construct_replacement_command "__TARGET_BIN__" "$PSUBMIT_OPTS_TARGET_BIN"))
     repl=$(echo "${repl}" $(construct_replacement_command "__JOB_NAME__" "$PSUBMIT_OPTS_JOB_NAME"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__MPI_OPTS__" "$PSUBMIT_OPTS_MPIOPTS"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__MPI_EXTRA__" "$PSUBMIT_OPTS_MPIEXTRA"))
+    repl=$(echo "${repl}" $(construct_replacement_command "__BATCH_EXTRA__" "$PSUBMIT_OPTS_BATCHEXTRA"))
     if [ "$suffix" == "" ]; then
         cat psubmit.opt.TEMPLATE | sed "$repl" > $dir/psubmit.opt
     else
